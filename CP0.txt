@@ -1,0 +1,26 @@
+Téma semestrální práce: Cestovní fórum pro hledání spolucestujících
+
+Stručný popis:
+Tento systém poskytne cestovatelům bezpečné prostředí pro komunikaci a plánování společných výletů.
+
+Cíl: Jediný bezpečný fórum pro cestovatele (místo spousty divných skupin na Facebook).
+Seznam hlavních funkcí aplikace:
+
+Role: 
+	Běžný uživatel:
+		-Vytvoření, mazaní, přihlašování a odhlašování ze svého profilu
+		-Oprava dat ve svém profilu
+		-Vytváření příspěvků
+		-Mazaní a opravování svých příspěvků
+		-Reagování na příspěvky
+		-Vyhledávání ostatních uživatelů a možnost se podívat na jejich profil
+		-Vyhledávání příspěvků pomocí filtrů
+		-Hodnocení ostatních uživatelů
+
+	Admin: běžný uživatel +
+		-Mazaní cizích příspěvků
+		-Mazaní cizích profilů
+		-Blokování běžných uživatelů
+
+Cílová skupina:
+Aplikace je určena cestovatelům, kteří hledají bezpečný způsob, jak najít spolucestující na své výlety.
