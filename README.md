@@ -1,35 +1,35 @@
 # JoinMe
-Cestovní fórum pro hledání spolucestujících.
-Tento systém poskytne cestovatelům bezpečné prostředí pro komunikaci a plánování společných výletů.
+Travel forum for finding travel companions.
+This system will provide travelers with a safe environment to communicate and plan joint trips.
 
-## Cíl
-Jediný bezpečný fórum pro cestovatele (místo spousty divných skupin na Facebook).
+## Purpose
+The safe forum for travelers (instead of tons of weird Facebook groups).
 
-## Bezpečnost
-Ověřování přes email
+## Safety
+Email verification
 
-## Planování výletů
-Zarověň s příspěvkem se vytvoří chat do kterého je automatický přidán admin chatu (uživatel který příspěvek vytvořil). Uživatele kreří mají zájem o výlet "odpoví" na příspěvek (odešle se dotaz na admina o schvalování), po schvalování dotazu adminem, zájemce je přidán do příslušného chatu.
+## Trip planning
+At the same time as the post, a chat is created to which the chat admin (the user who created the post) is automatically added. Kreří users who are interested in a trip "reply" to the post (a question is sent to the admin about approval), after the question is approved by the admin, the interested person is added to the relevant chat.
 
-## Cílová skupina
-Aplikace je určena cestovatelům a turistickým průvodcům všech urovni.
+## Target group
+The application is intended for travelers and tour guides of all levels.
 
-## Seznam hlavních funkcí aplikace
+## List of main features of the application
 ### Role:
-- <b>Běžný uživatel:</b>
-    - Vytvoření, mazaní, přihlašování a odhlašování ze svého profilu
-    - Oprava dat ve svém profilu
-    - Vytváření příspěvků
-    - Mazaní a opravování svých příspěvků
-    - Reagování na příspěvky (psaní komentářů)
-    - Psaní do společného chatu
-    - Odstranění uživatelů z chatu (platí jen pro admina chatu)
-    - Vyhledávání ostatních uživatelů a možnost se podívat na jejich profil
-    - Vyhledávání příspěvků pomocí filtrů
-    - Hodnocení ostatních uživatelů
-<br></br>
-- <b>Admin:</b> běžný uživatel +
-    - Mazaní cizích příspěvků
-    - Mazaní cizích profilů
-    - Blokování běžných uživatelů
+- <b>Normal user:</b>
+  - Create, delete, log in and log out from your profile
+  - Correction of data in your profile
+  - Creating posts
+  - Deleting and correcting your posts
+  - Responding to posts (writing comments)
+  - Writing in a common chat
+  - Deleting users from the chat (applies only to the chat admin)
+  - Searching for other users and being able to view their profile
+  - Search posts using filters
+  - Ratings of other users
+    <br></br>
+- <b>Admin:</b> regular user +
+  - Deleting other people's posts
+  - Deleting foreign profiles
+  - Blocking regular users
 
