@@ -7,7 +7,7 @@ Cíl: Jediný bezpečný fórum pro cestovatele (místo spousty divných skupin 
 
 Bezpečnost: Ověřování email
 
-Planování výletů: Zarověň s příspěvkem se vytvoří chat do kterého je automatický přidán admin chatu (uživatel který příspěvek vytvořil). Uživatele kreří mají zájem o výlet "odpoví" na příspěvek (odešle se dotaz na admina o schvalování), po schvalování dotazu adminem, zájemce je přidán do příslušného chatu.  
+Planování výletů: Zarověň s příspěvkem se vytvoří attendList do kterého je automatický přidán admin chatu (uživatel který příspěvek vytvořil). Uživatele kreří mají zájem o výlet "odpoví" na příspěvek (odešle se dotaz na admina o schvalování), po schvalování dotazu adminem, zájemce je přidán do příslušného chatu.
 
 Seznam hlavních funkcí aplikace: 
 Role: 

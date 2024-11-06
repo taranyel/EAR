@@ -5,9 +5,9 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
-public class Address extends AbstractEntity{
+public class Address extends AbstractEntity {
     @Basic(optional = false)
-    @Column(name="city", nullable = false)
+    @Column(name = "city", nullable = false)
     private String city;
 
     @Basic(optional = false)
@@ -27,7 +27,7 @@ public class Address extends AbstractEntity{
     private String country;
 
     @OneToMany
-    @JoinColumn(name = "id_address")
+    @JoinColumn(name = "address_id")
     private List<User> residents;
 
     public String getCity() {
@@ -76,17 +76,5 @@ public class Address extends AbstractEntity{
 
     public void setCountry(String country) {
         this.country = country;
-    }
-
-    @Override
-    public String toString() {
-        return "Address{" +
-                "city='" + city + '\'' +
-                ", street='" + street + '\'' +
-                ", number='" + number + '\'' +
-                ", postIndex='" + postIndex + '\'' +
-                ", country='" + country + '\'' +
-                ", residents=" + residents +
-                '}';
     }
 }

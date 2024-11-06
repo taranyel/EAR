@@ -10,14 +10,14 @@ public class Message extends AbstractEntity {
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    private Chat chat;
+    private Attendlist attendlist;
 
-    public Chat getChat() {
-        return chat;
+    public Attendlist getAttendlist() {
+        return attendlist;
     }
 
-    public void setChat(Chat chat) {
-        this.chat = chat;
+    public void setAttendlist(Attendlist attendlist) {
+        this.attendlist = attendlist;
     }
 
     public String getText() {
@@ -26,13 +26,5 @@ public class Message extends AbstractEntity {
 
     public void setText(String text) {
         this.text = text;
-    }
-
-    @Override
-    public String toString() {
-        return "Message{" +
-                "chat=" + chat +
-                ", text='" + text + '\'' +
-                '}';
     }
 }
