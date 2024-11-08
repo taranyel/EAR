@@ -1,30 +1,21 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
+@NamedQueries({
+        @NamedQuery(name = "Wishlist.findTripsByOwner", query = "SELECT w.trip FROM Wishlist w WHERE w.owner = :owner")
+})
 public class Wishlist extends AbstractEntity {
     @ManyToOne
     @JoinColumn(nullable = false)
     private User owner;
 
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn
     private Trip trip;
-
-    public User getOwner() {
-        return owner;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
-    }
-
-    public Trip getTrip() {
-        return trip;
-    }
-
-    public void setTrip(Trip trip) {
-        this.trip = trip;
-    }
 }

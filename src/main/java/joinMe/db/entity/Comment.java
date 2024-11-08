@@ -1,8 +1,15 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
+@NamedQueries({
+        @NamedQuery(name = "Comment.findByTrip", query = "SELECT c FROM Comment c WHERE c.trip = :trip")
+})
 public class Comment extends AbstractEntity {
     @Basic(optional = false)
     @Column(name="text", nullable = false)
@@ -15,28 +22,4 @@ public class Comment extends AbstractEntity {
     @ManyToOne
     @JoinColumn(nullable = false)
     private User author;
-
-    public Trip getTrip() {
-        return trip;
-    }
-
-    public void setTrip(Trip trip) {
-        this.trip = trip;
-    }
-
-    public User getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(User author) {
-        this.author = author;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-    }
 }

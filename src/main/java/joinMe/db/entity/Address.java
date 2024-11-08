@@ -1,11 +1,16 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
+import java.util.Objects;
 
+@Setter
+@Getter
 @Entity
-public class Address extends AbstractEntity {
+public abstract class Address extends AbstractEntity {
     @Basic(optional = false)
     @Column(name = "city", nullable = false)
     private String city;
@@ -30,51 +35,13 @@ public class Address extends AbstractEntity {
     @JoinColumn(name = "address_id")
     private List<User> residents;
 
-    public String getCity() {
-        return city;
+    public void addResident(User resident) {
+        Objects.requireNonNull(resident);
+        residents.add(resident);
     }
 
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getStreet() {
-        return street;
-    }
-
-    public void setStreet(String street) {
-        this.street = street;
-    }
-
-    public List<User> getResidents() {
-        return residents;
-    }
-
-    public void setResidents(List<User> residents) {
-        this.residents = residents;
-    }
-
-    public String getPostIndex() {
-        return postIndex;
-    }
-
-    public void setPostIndex(String postIndex) {
-        this.postIndex = postIndex;
-    }
-
-    public String getNumber() {
-        return number;
-    }
-
-    public void setNumber(String number) {
-        this.number = number;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
+    public void removeResident(User resident) {
+        Objects.requireNonNull(resident);
+        residents.remove(resident);
     }
 }

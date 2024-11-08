@@ -1,8 +1,15 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
+@NamedQueries({
+        @NamedQuery(name = "Complaint.findByAccused", query = "SELECT c FROM Complaint c WHERE c.accused = :accused")
+})
 public class Complaint extends AbstractEntity {
     @Basic(optional = false)
     @Column(name="description", nullable = false)
@@ -11,20 +18,4 @@ public class Complaint extends AbstractEntity {
     @ManyToOne
     @JoinColumn(nullable = false)
     private User accused;
-
-    public User getAccused() {
-        return accused;
-    }
-
-    public void setAccused(User accused) {
-        this.accused = accused;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 }

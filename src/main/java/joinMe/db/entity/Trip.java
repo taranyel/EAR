@@ -1,19 +1,33 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
+@Setter
+@Getter
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "Trip.findByCountry", query = "SELECT p FROM Trip p WHERE p.country = :country")
+        @NamedQuery(name = "Trip.findByCountry", query = "SELECT t FROM Trip t WHERE t.country = :country"),
+        @NamedQuery(name = "Trip.findByStartDate", query = "SELECT t FROM Trip t WHERE t.startDate = :startDate"),
+        @NamedQuery(name = "Trip.findByEndDate", query = "SELECT t FROM Trip t WHERE t.endDate = :endDate"),
+        @NamedQuery(name = "Trip.findByCapacity", query = "SELECT t FROM Trip t WHERE t.capacity = :capacity"),
+        @NamedQuery(name = "Trip.findByAuthor", query = "SELECT t FROM Trip t WHERE t.author = :author"),
+        @NamedQuery(name = "Trip.findInWishlistByOwner", query = "SELECT w.trip FROM Wishlist w WHERE w.owner = :owner")
 })
-public class Trip extends AbstractEntity{
+public class Trip extends AbstractEntity {
+
+    public Trip() {
+        created = LocalDateTime.now();
+    }
+
     @Basic(optional = false)
-    @Column(name="title", nullable = false)
+    @Column(name = "title", nullable = false)
     private String title;
 
     @Basic(optional = false)
@@ -33,12 +47,12 @@ public class Trip extends AbstractEntity{
     private Integer capacity;
 
     @Basic(optional = false)
-    @Column(name = "startDate", nullable = false)
-    private LocalDate startDate;
+    @Column(name = "start_date", nullable = false)
+    private Date startDate;
 
     @Basic(optional = false)
-    @Column(name = "tillDate", nullable = false)
-    private Date tillDate;
+    @Column(name = "end_date", nullable = false)
+    private Date endDate;
 
     @Basic(optional = false)
     @Column(name = "created", nullable = false)
@@ -50,190 +64,15 @@ public class Trip extends AbstractEntity{
 
     @OneToMany
     @JoinColumn(name = "trip_id")
-    List<Attendlist> attendlists;
+    private List<Comment> comments;
 
-    public List<Attendlist> getAttendlists() {
-        return attendlists;
+    public void addComment(Comment comment) {
+        Objects.requireNonNull(comment);
+        comments.add(comment);
     }
 
-    public void setAttendlists(List<Attendlist> attendlists) {
-        this.attendlists = attendlists;
+    public void removeComment(Comment comment) {
+        Objects.requireNonNull(comment);
+        comments.remove(comment);
     }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public Date getTillDate() {
-        return tillDate;
-    }
-
-    public void setTillDate(Date till) {
-        this.tillDate = till;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public User getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(User author) {
-        this.author = author;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public Integer getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(Integer capacity) {
-        this.capacity = capacity;
-    }
-
-    public LocalDateTime getCreated() {
-        return created;
-    }
-
-    public void setCreated(LocalDateTime created) {
-        this.created = created;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getImagePath() {
-        return imagePath;
-    }
-
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
-
-    //    @OneToMany
-//    @JoinColumn(name = "trip_id")
-//    private List<Comment> comments;
-//
-//    @OneToMany
-//    @JoinColumn(name = "trip_id")
-//    private List<Wishlist> tripInWishlist;
-//
-//    public AttendList getAttendList() {
-//        return attendList;
-//    }
-//
-//    public void setAttendList(AttendList attendList) {
-//        this.attendList = attendList;
-//    }
-//
-//    public List<Wishlist> getTripInWishlist() {
-//        return tripInWishlist;
-//    }
-//
-//    public void setTripInWishlist(List<Wishlist> tripInWishlist) {
-//        this.tripInWishlist = tripInWishlist;
-//    }
-//
-//
-//    public User getAuthor() {
-//        return author;
-//    }
-//
-//    public void setAuthor(User author) {
-//        this.author = author;
-//    }
-//
-//    public String getTitle() {
-//        return title;
-//    }
-//
-//    public void setTitle(String title) {
-//        this.title = title;
-//    }
-//
-//    public Date getTill() {
-//        return till;
-//    }
-//
-//    public void setTill(Date till) {
-//        this.till = till;
-//    }
-//
-//    public String getImagePath() {
-//        return imagePath;
-//    }
-//
-//    public void setImagePath(String imagePath) {
-//        this.imagePath = imagePath;
-//    }
-//
-//    public Date getFrom() {
-//        return from;
-//    }
-//
-//    public void setFrom(Date from) {
-//        this.from = from;
-//    }
-//
-//    public String getDescription() {
-//        return description;
-//    }
-//
-//    public void setDescription(String description) {
-//        this.description = description;
-//    }
-//
-//    public LocalDateTime getCreated() {
-//        return created;
-//    }
-//
-//    public void setCreated(LocalDateTime created) {
-//        this.created = created;
-//    }
-//
-//    public String getCountry() {
-//        return country;
-//    }
-//
-//    public void setCountry(String country) {
-//        this.country = country;
-//    }
-//
-//    public List<Comment> getComments() {
-//        return comments;
-//    }
-//
-//    public void setComments(List<Comment> comments) {
-//        this.comments = comments;
-//    }
-//
-//    public Integer getCapacity() {
-//        return capacity;
-//    }
-//
-//    public void setCapacity(Integer capacity) {
-//        this.capacity = capacity;
-//    }
 }
