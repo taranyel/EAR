@@ -10,9 +10,9 @@ import java.util.List;
 @NamedQueries({
         @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username")
 })
-public class User extends AbstractEntity{
+public class User extends AbstractEntity {
     @Basic(optional = false)
-    @Column(name="first_name", nullable = false)
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
     @Basic(optional = false)
@@ -52,92 +52,20 @@ public class User extends AbstractEntity{
     private Address address;
 
     @OneToMany(mappedBy = "accused")
-    @JoinColumn(name = "id_user")
     private List<Complaint> complaints;
 
-    @OneToMany
-    @JoinColumn(name = "id_user")
-    private List<UserInChat> userInChats;
+    @OneToMany(mappedBy = "joiner")
+    private List<Attendlist> attendlists;
 
     @OneToMany(mappedBy = "author")
     @OrderBy("created")
-    @JoinColumn(name = "id_user")
-    private List<Post> posts;
+    private List<Trip> trips;
 
-    @OneToOne
-    private Wishlist wishlist;
+    @OneToMany(mappedBy = "owner")
+    private List<Wishlist> wishlist;
 
-    public Address getAddress() {
-        return address;
-    }
-
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
-    public Wishlist getWishlist() {
-        return wishlist;
-    }
-
-    public void setWishlist(Wishlist wishlist) {
-        this.wishlist = wishlist;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public List<UserInChat> getUserInChats() {
-        return userInChats;
-    }
-
-    public void setUserInChats(List<UserInChat> userInChats) {
-        this.userInChats = userInChats;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public Integer getRating() {
-        return rating;
-    }
-
-    public void setRating(Integer rating) {
-        this.rating = rating;
-    }
-
-    public List<Post> getPosts() {
-        return posts;
-    }
-
-    public void setPosts(List<Post> posts) {
-        this.posts = posts;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+    @OneToMany(mappedBy = "author")
+    private List<Comment> comments;
 
     public String getFirstName() {
         return firstName;
@@ -145,30 +73,6 @@ public class User extends AbstractEntity{
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public List<Complaint> getComplaints() {
-        return complaints;
-    }
-
-    public void setComplaints(List<Complaint> complaints) {
-        this.complaints = complaints;
-    }
-
-    public Date getBirthdate() {
-        return birthdate;
-    }
-
-    public void setBirthdate(Date birthdate) {
-        this.birthdate = birthdate;
     }
 
     public String getImagePath() {
@@ -179,22 +83,75 @@ public class User extends AbstractEntity{
         this.imagePath = imagePath;
     }
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "address=" + address +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", role=" + role +
-                ", birthdate=" + birthdate +
-                ", rating=" + rating +
-                ", imagePath='" + imagePath + '\'' +
-                ", complaints=" + complaints +
-                ", userInChats=" + userInChats +
-                ", posts=" + posts +
-                ", wishlist=" + wishlist +
-                '}';
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Integer getRating() {
+        return rating;
+    }
+
+    public void setRating(Integer rating) {
+        this.rating = rating;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public Date getBirthdate() {
+        return birthdate;
+    }
+
+    public void setBirthdate(Date birthdate) {
+        this.birthdate = birthdate;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public List<Complaint> getComplaints() {
+        return complaints;
+    }
+
+    public void setComplaints(List<Complaint> complaints) {
+        this.complaints = complaints;
     }
 }

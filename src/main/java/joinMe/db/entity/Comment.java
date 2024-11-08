@@ -10,14 +10,26 @@ public class Comment extends AbstractEntity {
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    private Post post;
+    private Trip trip;
 
-    public Post getPost() {
-        return post;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private User author;
+
+    public Trip getTrip() {
+        return trip;
     }
 
-    public void setPost(Post post) {
-        this.post = post;
+    public void setTrip(Trip trip) {
+        this.trip = trip;
+    }
+
+    public User getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(User author) {
+        this.author = author;
     }
 
     public String getText() {
@@ -26,13 +38,5 @@ public class Comment extends AbstractEntity {
 
     public void setText(String text) {
         this.text = text;
-    }
-
-    @Override
-    public String toString() {
-        return "Comment{" +
-                "post=" + post +
-                ", text='" + text + '\'' +
-                '}';
     }
 }
