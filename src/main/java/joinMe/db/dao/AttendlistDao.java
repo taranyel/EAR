@@ -7,6 +7,7 @@ import joinMe.db.entity.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Objects;
 
 @Repository
 public class AttendlistDao extends BaseDao<Attendlist> {

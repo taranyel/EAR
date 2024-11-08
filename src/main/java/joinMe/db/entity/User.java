@@ -21,7 +21,11 @@ public class User extends AbstractEntity {
     public User() {
         trips = new ArrayList<>();
         role = Constants.DEFAULT_ROLE;
+        status = Constants.DEFAULT_ACCOUNT_STATUS;
         wishlists = new ArrayList<>();
+        complaints = new ArrayList<>();
+        attendlists = new ArrayList<>();
+        joinRequests = new ArrayList<>();
     }
 
     @Basic(optional = false)
@@ -47,6 +51,10 @@ public class User extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private AccountStatus status;
 
     @Basic(optional = false)
     @Column(name = "birthdate", nullable = false)
@@ -77,8 +85,8 @@ public class User extends AbstractEntity {
     @OneToMany(mappedBy = "owner")
     private List<Wishlist> wishlists;
 
-    @OneToMany(mappedBy = "author")
-    private List<Comment> comments;
+    @OneToMany(mappedBy = "requester")
+    private List<JoinRequest> joinRequests;
 
     public void encodePassword(PasswordEncoder encoder) {
         this.password = encoder.encode(password);
@@ -128,14 +136,13 @@ public class User extends AbstractEntity {
         wishlists.remove(wishlist);
     }
 
-    public void addComment(Comment comment) {
-        Objects.requireNonNull(comment);
-        comments.remove(comment);
-        comments.add(comment);
+    public void addJoinRequest(JoinRequest joinRequest) {
+        Objects.requireNonNull(joinRequest);
+        joinRequests.add(joinRequest);
     }
 
-    public void removeComment(Comment comment) {
-        Objects.requireNonNull(comment);
-        comments.remove(comment);
+    public void removeJoinRequest(JoinRequest joinRequest) {
+        Objects.requireNonNull(joinRequest);
+        joinRequests.remove(joinRequest);
     }
 }

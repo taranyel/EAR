@@ -45,4 +45,8 @@ public class Attendlist extends AbstractEntity{
         Objects.requireNonNull(message);
         messages.remove(message);
     }
+
+    public User getAdmin() {
+        return trip.getAuthor();
+    }
 }

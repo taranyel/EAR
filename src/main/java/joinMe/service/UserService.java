@@ -1,8 +1,10 @@
 package joinMe.service;
 
 import joinMe.db.dao.AttendlistDao;
+import joinMe.db.dao.JoinRequestDao;
 import joinMe.db.dao.UserDao;
 import joinMe.db.entity.*;
+import joinMe.db.exception.JoinRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,13 +18,16 @@ public class UserService {
 
     private final UserDao userDao;
 
+    private final JoinRequestDao joinRequestDao;
+
     private final AttendlistDao attendlistDao;
 
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserDao userDao, AttendlistDao attendlistDao, PasswordEncoder passwordEncoder) {
+    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao, PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
+        this.joinRequestDao = joinRequestDao;
         this.attendlistDao = attendlistDao;
         this.passwordEncoder = passwordEncoder;
     }
@@ -80,22 +85,6 @@ public class UserService {
     }
 
     @Transactional
-    public void addComment(User user, Comment comment) {
-        Objects.requireNonNull(user);
-        Objects.requireNonNull(comment);
-        user.addComment(comment);
-        userDao.update(user);
-    }
-
-    @Transactional
-    public void removeComment(User user, Comment comment) {
-        Objects.requireNonNull(user);
-        Objects.requireNonNull(comment);
-        user.removeComment(comment);
-        userDao.update(user);
-    }
-
-    @Transactional
     public void addComplaint(User user, Complaint complaint) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(complaint);
@@ -115,6 +104,22 @@ public class UserService {
     public void addAttendlist(User user, Attendlist attendlist) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(attendlist);
+
+        User tripCreator = attendlist.getAdmin();
+
+        if (user == tripCreator) {
+            throw new JoinRequestException("Creator added to the trip automatically.");
+        }
+
+        JoinRequest existingRequest = joinRequestDao.findByRequesterAndTrip(attendlist.getJoiner(), attendlist.getTrip());
+        if (existingRequest == null) {
+            throw new JoinRequestException("Joiner cannot be added to attendlist without join request.");
+        }
+
+        if (existingRequest.getStatus() != RequestStatus.APPROVED) {
+            throw new JoinRequestException("Joiner cannot be added to attendlist without approval.");
+        }
+
         user.addAttendlist(attendlist);
         userDao.update(user);
     }
@@ -124,6 +129,33 @@ public class UserService {
         Objects.requireNonNull(user);
         Objects.requireNonNull(attendlist);
         user.removeAttendlist(attendlist);
+        userDao.update(user);
+    }
+
+    @Transactional
+    public void addJoinRequest(User user, JoinRequest joinRequest) {
+        Objects.requireNonNull(user);
+        Objects.requireNonNull(joinRequest);
+
+        User tripCreator = joinRequest.getTrip().getAuthor();
+        if (user == tripCreator) {
+            throw new JoinRequestException("User cannot create join request to the trip he is author of.");
+        }
+
+        JoinRequest existingRequest = joinRequestDao.findByRequesterAndTrip(joinRequest.getRequester(), joinRequest.getTrip());
+        if (existingRequest != null && existingRequest.getStatus() != RequestStatus.REJECTED) {
+            throw new JoinRequestException("User cannot create more than one join request to one trip.");
+        }
+
+        user.addJoinRequest(joinRequest);
+        userDao.update(user);
+    }
+
+    @Transactional
+    public void removeJoinRequest(User user, JoinRequest joinRequest) {
+        Objects.requireNonNull(user);
+        Objects.requireNonNull(joinRequest);
+        user.removeJoinRequest(joinRequest);
         userDao.update(user);
     }
 
@@ -139,5 +171,37 @@ public class UserService {
 
     public List<Attendlist> getAllAttendlists(User user) {
         return user.getAttendlists();
+    }
+
+    @Transactional
+    public void approveJoinRequest(JoinRequest joinRequest) {
+        Objects.requireNonNull(joinRequest);
+        User requester = joinRequest.getRequester();
+
+        Attendlist attendlist = new Attendlist(requester, joinRequest.getTrip());
+        requester.addAttendlist(attendlist);
+        joinRequest.setStatus(RequestStatus.APPROVED);
+
+        joinRequestDao.update(joinRequest);
+        userDao.update(requester);
+    }
+
+    @Transactional
+    public void rejectJoinRequest(JoinRequest joinRequest) {
+        Objects.requireNonNull(joinRequest);
+        joinRequest.setStatus(RequestStatus.REJECTED);
+        joinRequestDao.update(joinRequest);
+    }
+
+    @Transactional
+    public void blockUser(User user) {
+        user.setStatus(AccountStatus.BLOCKED);
+        userDao.update(user);
+    }
+
+    @Transactional
+    public void unblockUser(User user) {
+        user.setStatus(AccountStatus.ACTIVE);
+        userDao.update(user);
     }
 }
