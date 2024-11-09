@@ -1,8 +1,15 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
+@NamedQueries({
+        @NamedQuery(name = "Message.findByAuthor", query = "SELECT m FROM Message m WHERE m.author = :author")
+})
 public class Message extends AbstractEntity {
     @Basic(optional = false)
     @Column(name="text", nullable = false)
@@ -12,19 +19,7 @@ public class Message extends AbstractEntity {
     @JoinColumn(nullable = false)
     private Attendlist attendlist;
 
-    public Attendlist getAttendlist() {
-        return attendlist;
-    }
-
-    public void setAttendlist(Attendlist attendlist) {
-        this.attendlist = attendlist;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-    }
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private User author;
 }

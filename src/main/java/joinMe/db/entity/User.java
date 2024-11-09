@@ -1,16 +1,33 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import joinMe.util.Constants;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "EAR_USER")
 @NamedQueries({
-        @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username")
+        @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username"),
+        @NamedQuery(name = "User.getAllJoinersOfAttendlist", query = "SELECT a.joiner FROM Attendlist a WHERE a.trip = :trip"),
 })
 public class User extends AbstractEntity {
+
+    public User() {
+        trips = new ArrayList<>();
+        role = Constants.DEFAULT_ROLE;
+        status = Constants.DEFAULT_ACCOUNT_STATUS;
+        wishlists = new ArrayList<>();
+        complaints = new ArrayList<>();
+        attendlists = new ArrayList<>();
+        joinRequests = new ArrayList<>();
+    }
+
     @Basic(optional = false)
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -34,6 +51,10 @@ public class User extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private AccountStatus status;
 
     @Basic(optional = false)
     @Column(name = "birthdate", nullable = false)
@@ -62,96 +83,66 @@ public class User extends AbstractEntity {
     private List<Trip> trips;
 
     @OneToMany(mappedBy = "owner")
-    private List<Wishlist> wishlist;
+    private List<Wishlist> wishlists;
 
-    @OneToMany(mappedBy = "author")
-    private List<Comment> comments;
+    @OneToMany(mappedBy = "requester")
+    private List<JoinRequest> joinRequests;
 
-    public String getFirstName() {
-        return firstName;
+    public void encodePassword(PasswordEncoder encoder) {
+        this.password = encoder.encode(password);
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public boolean isAdmin() {
+        return role == Role.ADMIN;
     }
 
-    public String getImagePath() {
-        return imagePath;
+    public void addTrip(Trip trip) {
+        Objects.requireNonNull(trip);
+        trips.add(trip);
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+    public void removeTrip(Trip trip) {
+        Objects.requireNonNull(trip);
+        trips.remove(trip);
     }
 
-    public String getLastName() {
-        return lastName;
+    public void addComplaint(Complaint complaint) {
+        Objects.requireNonNull(complaint);
+        complaints.add(complaint);
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void removeComplaint(Complaint complaint) {
+        Objects.requireNonNull(complaint);
+        complaints.remove(complaint);
     }
 
-    public String getPassword() {
-        return password;
+    public void addAttendlist(Attendlist attendlist) {
+        Objects.requireNonNull(attendlist);
+        attendlists.add(attendlist);
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void removeAttendlist(Attendlist attendlist) {
+        Objects.requireNonNull(attendlist);
+        attendlists.remove(attendlist);
     }
 
-    public Integer getRating() {
-        return rating;
+    public void addWishlist(Wishlist wishlist) {
+        Objects.requireNonNull(wishlist);
+        wishlists.add(wishlist);
     }
 
-    public void setRating(Integer rating) {
-        this.rating = rating;
+    public void removeWishlist(Wishlist wishlist) {
+        Objects.requireNonNull(wishlist);
+        wishlists.remove(wishlist);
     }
 
-    public Role getRole() {
-        return role;
+    public void addJoinRequest(JoinRequest joinRequest) {
+        Objects.requireNonNull(joinRequest);
+        joinRequests.add(joinRequest);
     }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public Date getBirthdate() {
-        return birthdate;
-    }
-
-    public void setBirthdate(Date birthdate) {
-        this.birthdate = birthdate;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Address getAddress() {
-        return address;
-    }
-
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
-    public List<Complaint> getComplaints() {
-        return complaints;
-    }
-
-    public void setComplaints(List<Complaint> complaints) {
-        this.complaints = complaints;
+    public void removeJoinRequest(JoinRequest joinRequest) {
+        Objects.requireNonNull(joinRequest);
+        joinRequests.remove(joinRequest);
     }
 }

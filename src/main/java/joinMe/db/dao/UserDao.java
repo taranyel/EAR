@@ -1,6 +1,7 @@
 package joinMe.db.dao;
 
 import jakarta.persistence.NoResultException;
+import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
 import org.springframework.stereotype.Repository;
 
@@ -21,9 +22,10 @@ public class UserDao extends BaseDao<User>{
         }
     }
 
-    public List<User> findByRole(String role) {
+    public List<User> getAllJoinersOfAttendlist(Trip trip) {
         try {
-            return em.createQuery("SELECT u FROM User u WHERE u.role = :role", User.class).setParameter("role", role).getResultList();
+            return em.createNamedQuery("User.getAllJoinersOfAttendlist", User.class).setParameter("trip", trip)
+                    .getResultList();
         } catch (NoResultException e) {
             return null;
         }
