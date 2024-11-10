@@ -7,7 +7,6 @@ import joinMe.db.entity.Message;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
 import joinMe.environment.Generator;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -16,6 +15,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -29,13 +29,9 @@ public class MessageDaoTest {
     private MessageDao messageDao;
 
     @Test
-    public void findByCountryReturnsCorrectCountryById() {
-        User user = Generator.generateUser();
-        em.persist(user.getAddress());
-        em.persist(user);
-
-        Trip trip = Generator.generateTrip(user);
-        em.persist(trip);
+    public void findByAuthorReturnCorrectMessage() {
+        User user = Generator.generateUser(em);
+        Trip trip = Generator.generateTrip(user, em);
         user.addTrip(trip);
 
         Attendlist attendlist = new Attendlist();

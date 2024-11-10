@@ -25,7 +25,7 @@ public class UserDaoTest {
 
     @Test
     public void findByUsernameReturnsPersonWithMatchingUsername() {
-        final User user = Generator.generateUser();
+        final User user = Generator.generateUser(em);
         em.persist(user.getAddress());
         em.persist(user);
 

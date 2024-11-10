@@ -15,7 +15,7 @@ import lombok.Setter;
 })
 public class JoinRequest extends AbstractEntity {
     public JoinRequest() {
-        status = Constants.DEFAULT_REQUEST_STATUS_AFTER_OBJECT_CREATED;
+        status = Constants.DEFAULT_REQUEST_STATUS;
     }
 
     @ManyToOne

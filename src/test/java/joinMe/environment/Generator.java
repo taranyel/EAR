@@ -1,8 +1,6 @@
 package joinMe.environment;
 
-import joinMe.db.dao.AddressDao;
 import joinMe.db.entity.*;
-import joinMe.service.UserService;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.time.LocalDateTime;
@@ -50,7 +48,7 @@ public class Generator {
         return RAND.nextBoolean();
     }
 
-    public static User generateUser() {
+    public static User generateUser(TestEntityManager em) {
         final User user = new User();
         final Flat flat = new Flat();
         flat.setCity(randomString());
@@ -70,23 +68,21 @@ public class Generator {
         user.setBirthdate(new Date());
         user.setRating(0);
         flat.addResident(user);
+
+        em.persist(user.getAddress());
+        em.persist(user);
         return user;
     }
 
-    public static List<User> generateUsers(int value, TestEntityManager em, AddressDao dao, UserService service) {
+    public static List<User> generateUsers(int value, TestEntityManager em) {
         List<User> buffer = new ArrayList<>();
         for (int i = 0; i < value; i++) {
-            buffer.add(generateUser());
-            User user = buffer.get(i);
-            em.persist(user.getAddress());
-            em.persist(user);
-            dao.persist(user.getAddress());
-            service.persist(user);
+            buffer.add(generateUser(em));
         }
         return buffer;
     }
 
-    public static Trip generateTrip(User author) {
+    public static Trip generateTrip(User author, TestEntityManager em) {
         final Trip t = new Trip();
         t.setAuthor(author);
         t.setCountry(randomString());
@@ -97,6 +93,16 @@ public class Generator {
         t.setStartDate(new Date());
         t.setEndDate(new Date());
         t.setCreated(LocalDateTime.now());
+
+        em.persist(t);
         return t;
+    }
+
+    public static List<Trip> generateTrips(int value, User author, TestEntityManager em) {
+        List<Trip> buffer = new ArrayList<>();
+        for (int i = 0; i < value; i++) {
+            buffer.add(generateTrip(author, em));
+        }
+        return buffer;
     }
 }

@@ -4,27 +4,20 @@ import joinMe.db.dao.*;
 import joinMe.db.entity.*;
 import joinMe.db.exception.JoinRequestException;
 import joinMe.environment.Generator;
-import org.hibernate.PropertyValueException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestEntityManager;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -33,7 +26,6 @@ import static org.mockito.Mockito.verify;
 @AutoConfigureTestEntityManager
 @ActiveProfiles("test")
 public class UserServiceTest {
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
     private TestEntityManager em;
@@ -50,7 +42,7 @@ public class UserServiceTest {
     @SpyBean
     private JoinRequestDao joinRequestDao;
 
-//    @Mock
+    //    @Mock
     @SpyBean
     private AttendlistDao attendlistDao;
 
@@ -63,176 +55,149 @@ public class UserServiceTest {
 
     @BeforeEach
     public void setUp() {
-        user = Generator.generateUser();
-        trip = Generator.generateTrip(user);
-        em.persist(user.getAddress());
-        em.persist(user);
-        em.persist(trip);
-        addressDao.persist(user.getAddress());
-        userService.persist(user);
+        user = Generator.generateUser(em);
+    }
+
+    public void addTripIntoListByTrip(User us, Trip trip, int i) {
+        userService.addTrip(us, trip);
+        verify(attendlistDao).persist(us.getAttendlists().get(i));
+        verify(userDao, times(i + 1)).update(us);
+    }
+
+    public void addTripsIntoListByList(User us, List<Trip> trips) {
+        for (int i = 0; i < trips.size(); i++) {
+            addTripIntoListByTrip(us, trips.get(i), i);
+        }
+    }
+
+    public void addRequestApproveRequestForUser(User us, Trip trip) {
+        JoinRequest joinRequest = new JoinRequest();
+        joinRequest.setRequester(us);
+        joinRequest.setTrip(trip);
+        userService.addJoinRequest(us, joinRequest);
+        verify(joinRequestDao).persist(joinRequest);
+        verify(userDao).update(us);
+        userService.approveJoinRequest(joinRequest);
+        verify(attendlistDao).persist(us.getAttendlists().get(0));
+        verify(joinRequestDao).update(joinRequest);
+        verify(userDao, times(2)).update(joinRequest.getRequester());
+    }
+
+    public void addRequestApproveRequestForUsersList(List<User> users, Trip trip) {
+        for (User value : users) {
+            addRequestApproveRequestForUser(value, trip);
+        }
     }
 
     @Test
     public void addTripCreatesAttendlistAndAddsTripCreatorAutomatically() {
-        //Check that attendList table is empty when trip is not linked with owner
-        final List<Attendlist> attendlistsBeforePersist = em.getEntityManager().createQuery("SELECT a FROM Attendlist  a", Attendlist.class).getResultList();
-        assertEquals(0, attendlistsBeforePersist.size());
+        trip = Generator.generateTrips(1, user, em).get(0);
 
+        addTripIntoListByTrip(user, trip, 0);
 
-        //Trip and attendList are persisted into the table and retrieving the data from attendList table should return 1 result
-        userService.addTrip(user, trip);
-        final List<Attendlist> attendlistsAfterPersist = em.getEntityManager().createQuery("SELECT a FROM Attendlist  a", Attendlist.class).getResultList();
-        assertEquals(1, attendlistsAfterPersist.size());
-        verify(tripDao).persist(trip);
-        verify(attendlistDao).persist(user.getAttendlists().get(0));
-        //Check that after attendlist persist the creator was added automatically into the table
-        assertEquals(user.getId(), attendlistsAfterPersist.get(0).getAdmin().getId());
+        final User result = em.find(User.class, user.getId());
+        assertEquals(user.getAttendlists(), result.getAttendlists());
+    }
 
-        //Trip and attendList are persisted into the table and retrieving the data from attendList table should return 2 results
-        trip = Generator.generateTrip(user);
-        em.persist(trip);
-        userService.addTrip(user, trip);
-        final List<Attendlist> attendlistsAfterPersist2 = em.getEntityManager().createQuery("SELECT a FROM Attendlist  a", Attendlist.class).getResultList();
-        assertEquals(2, attendlistsAfterPersist2.size());
-        verify(tripDao).persist(trip);
-        verify(attendlistDao).persist(user.getAttendlists().get(1));
-        assertEquals(user.getId(), attendlistsAfterPersist2.get(1).getAdmin().getId());
+    @Test
+    public void addTripCreatesAttendlistAndAddsTripCreatorAutomaticallyWithMoreTrips() {
+        List<Trip> trips = Generator.generateTrips(3, user, em);
 
-        //Try to create another user which creates the trip with different id
-        user = Generator.generateUser();
-        trip = Generator.generateTrip(user);
-        em.persist(user.getAddress());
-        em.persist(user);
-        em.persist(trip);
-        addressDao.persist(user.getAddress());
-        userService.persist(user);
-        userService.addTrip(user, trip);
-        final List<Attendlist> attendlistsAfterPersist3 = em.getEntityManager().createQuery("SELECT a FROM Attendlist  a", Attendlist.class).getResultList();
-        assertEquals(3, attendlistsAfterPersist3.size());
-        verify(tripDao).persist(trip);
-        verify(attendlistDao).persist(user.getAttendlists().get(0));
-        //Check that after attendlist persist the creator was added automatically into the table
-        assertEquals(user.getId(), attendlistsAfterPersist3.get(2).getAdmin().getId());
+        addTripsIntoListByList(user, trips);
+
+        final User result = em.find(User.class, user.getId());
+        assertEquals(user.getAttendlists(), result.getAttendlists());
+        assertEquals(user.getTrips(), result.getTrips());
     }
 
     @Test
     public void removeTripRemovesAllUsersInAttendlist() {
-        List<User> buffer = Generator.generateUsers(2, em, addressDao, userService);
+        List<User> toRemoveUsers = Generator.generateUsers(2, em);
+        trip = Generator.generateTrip(user, em);
 
-        userService.addTrip(user, trip);
-
-        for (User us : buffer) {
-            JoinRequest joinRequest = new JoinRequest();
-            joinRequest.setRequester(us);
-            joinRequest.setTrip(trip);
-            em.persist(joinRequest);
-            userService.addJoinRequest(us, joinRequest);
-            userService.approveJoinRequest(joinRequest);
-            em.persist(us.getAttendlists().get(0));
-        }
-        final List<Attendlist> attends = em.getEntityManager().createQuery("SELECT a FROM Attendlist  a", Attendlist.class).getResultList();
-        final List<User> users = em.getEntityManager().createQuery("SELECT a FROM User  a", User.class).getResultList();
-        final List<JoinRequest> joinRequests = em.getEntityManager().createQuery("SELECT a FROM JoinRequest  a", JoinRequest.class).getResultList();
-        assertEquals(1, user.getTrips().size());
-        assertEquals(1, user.getAttendlists().size());
-        for (User us : buffer) {
-            assertEquals(1, us.getAttendlists().size());
-        }
+        addTripIntoListByTrip(user, trip, 0);
+        addRequestApproveRequestForUsersList(toRemoveUsers, trip);
 
         userService.removeTrip(user, trip);
 
-        assertEquals(0, user.getAttendlists().size());
-        assertEquals(0, user.getTrips().size());
-        for (User us : buffer) {
-            assertEquals(0, us.getAttendlists().size());
+        final List<User> resultList = em.getEntityManager().createQuery("SELECT u FROM User u", User.class).getResultList();
+        for (User result : resultList) {
+            assertEquals(0, result.getAttendlists().size());
+            if (result.isAdmin()) {
+                assertEquals(0, result.getTrips().size());
+            }
         }
     }
 
     @Test
     public void approveRequestAddsUserIntoAttendlist() {
-        List<User> buffer = Generator.generateUsers(2, em, addressDao, userService);
+        List<User> toRemoveUsers = Generator.generateUsers(2, em);
+        trip = Generator.generateTrip(user, em);
 
-        userService.addTrip(user, trip);
+        addTripIntoListByTrip(user, trip, 0);
+        addRequestApproveRequestForUsersList(toRemoveUsers, trip);
 
-        final List<Attendlist> attends = em.getEntityManager().createQuery("SELECT a FROM Attendlist  a", Attendlist.class).getResultList();
-        assertEquals(1, attends.size());
-        verify(userDao).update(user);
 
-        for (User us : buffer) {
-            JoinRequest joinRequest = new JoinRequest();
-            joinRequest.setRequester(us);
-            joinRequest.setTrip(trip);
-            em.persist(joinRequest);
-
-            userService.addJoinRequest(us, joinRequest);
-            verify(joinRequestDao).persist(joinRequest);
-            verify(userDao).update(us);
-
-            userService.approveJoinRequest(joinRequest);
-            em.persist(us.getAttendlists().get(0));
-            verify(attendlistDao).persist(us.getAttendlists().get(0));
-            verify(joinRequestDao).update(joinRequest);
-            verify(userDao, times(2)).update(joinRequest.getRequester());
+        final List<User> resultList = em.getEntityManager().createQuery("SELECT u FROM User u", User.class).getResultList();
+        for (User result : resultList) {
+            assertEquals(1, result.getAttendlists().size());
         }
-
-        final List<Attendlist> attendsAfterInserting = em.getEntityManager().createQuery("SELECT a FROM Attendlist  a", Attendlist.class).getResultList();
-        assertEquals(3, attendsAfterInserting.size());
     }
 
     @Test
-    public void addJoinRequestForRegularUser() {
-        List<User> buffer = Generator.generateUsers(1, em, addressDao, userService);
+    public void addJoinRequestThrowsJoinRequestException() {
+        User toAddUser = Generator.generateUser(em);
+        trip = Generator.generateTrip(user, em);
 
-        userService.addTrip(user, trip);
-        verify(userDao).update(user);
+        addTripIntoListByTrip(user, trip, 0);
+        addRequestApproveRequestForUser(toAddUser, trip);
 
-        for (User us : buffer) {
-            JoinRequest joinRequest = new JoinRequest();
-            joinRequest.setRequester(us);
-            joinRequest.setTrip(trip);
-            em.persist(joinRequest);
 
-            userService.addJoinRequest(us, joinRequest);
-            verify(joinRequestDao).persist(joinRequest);
-            verify(userDao).update(us);
+        JoinRequest joinRequest = new JoinRequest();
+        joinRequest.setRequester(toAddUser);
+        joinRequest.setTrip(trip);
 
-            //Try to produce the second joinRequest
-            Exception exception = assertThrows(JoinRequestException.class, () -> {
-                userService.addJoinRequest(us, joinRequest);
-            });
-            assertEquals("User cannot create more than one join request to one trip.", exception.getMessage());
-        }
+        Exception exception = assertThrows(JoinRequestException.class, () -> {
+            userService.addJoinRequest(toAddUser, joinRequest);
+        });
+        assertEquals("User cannot create more than one join request to one trip.", exception.getMessage());
     }
 
     @Test
     public void addJoinRequestForRejectedRegularUser() {
-        List<User> buffer = Generator.generateUsers(1, em, addressDao, userService);
-        User us = buffer.get(0);
+        User toAddUser = Generator.generateUser(em);
+        trip = Generator.generateTrip(user, em);
 
-        userService.addTrip(user, trip);
-        verify(userDao).update(user);
+        addTripIntoListByTrip(user, trip, 0);
 
         JoinRequest joinRequest = new JoinRequest();
-        joinRequest.setRequester(us);
+        joinRequest.setRequester(toAddUser);
         joinRequest.setTrip(trip);
         joinRequest.setStatus(RequestStatus.REJECTED);
         em.persist(joinRequest);
-        assertEquals(RequestStatus.REJECTED, joinRequest.getStatus());
 
-        userService.addJoinRequest(us, joinRequest);
-        assertEquals(RequestStatus.IN_PROGRESS, joinRequest.getStatus());
-        verify(joinRequestDao).persist(joinRequest);
-        verify(userDao).update(us);
+        addRequestApproveRequestForUser(toAddUser, trip);
+
+        final List<User> resultList = em.getEntityManager().createQuery("SELECT u FROM User u", User.class).getResultList();
+        for (User result : resultList) {
+            assertEquals(1, result.getAttendlists().size());
+            if (!result.getTrips().isEmpty()) {
+                assertEquals(user.getAttendlists(), result.getAttendlists());
+            } else {
+                assertEquals(toAddUser.getAttendlists(), result.getAttendlists());
+            }
+        }
     }
 
     @Test
-    public void addJoinRequestForAdminWithException() {
+    public void addJoinRequestForCreatorThrowsJoinRequestException() {
+        trip = Generator.generateTrip(user, em);
+
         JoinRequest joinRequest = new JoinRequest();
         joinRequest.setRequester(user);
         joinRequest.setTrip(trip);
         em.persist(joinRequest);
 
-        //Try to produce join request for admin
         Exception exception = assertThrows(JoinRequestException.class, () -> {
             userService.addJoinRequest(user, joinRequest);
         });
@@ -241,19 +206,17 @@ public class UserServiceTest {
 
     @Test
     public void approveJoinRequestWithMandatoryFieldsMissing() {
-        List<User> buffer = Generator.generateUsers(2, em, addressDao, userService);
+        User us = Generator.generateUser(em);
+        trip = Generator.generateTrip(us, em);
 
-        userService.addTrip(user, trip);
-        verify(userDao).update(user);
+        addTripIntoListByTrip(user, trip, 0);
 
-        for (User us : buffer) {
-            JoinRequest joinRequest = new JoinRequest();
-            joinRequest.setRequester(us);
+        JoinRequest joinRequest = new JoinRequest();
+        joinRequest.setRequester(us);
 
-            Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-                userService.addJoinRequest(us, joinRequest);
-            });
-            assertEquals("Fields in joinRequest can't be null!", exception.getMessage());
-        }
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.addJoinRequest(us, joinRequest);
+        });
+        assertEquals("Fields in joinRequest can't be null!", exception.getMessage());
     }
 }

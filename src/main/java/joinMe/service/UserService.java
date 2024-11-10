@@ -52,7 +52,6 @@ public class UserService {
 
         Attendlist attendlist = new Attendlist(user, trip);
         user.addAttendlist(attendlist);
-        tripDao.persist(trip);
         attendlistDao.persist(attendlist);
         userDao.update(user);
     }
@@ -127,7 +126,6 @@ public class UserService {
         }
 
         user.addAttendlist(attendlist);
-        attendlistDao.update(attendlist);
         userDao.update(user);
     }
 
@@ -154,7 +152,7 @@ public class UserService {
         }
 
         JoinRequest existingRequest = joinRequestDao.findByRequesterAndTrip(joinRequest.getRequester(), joinRequest.getTrip());
-        if (existingRequest.getStatus() != RequestStatus.CREATED && existingRequest.getStatus() != RequestStatus.REJECTED) {
+        if (existingRequest != null && existingRequest.getStatus() != RequestStatus.REJECTED) {
             throw new JoinRequestException("User cannot create more than one join request to one trip.");
         }
 

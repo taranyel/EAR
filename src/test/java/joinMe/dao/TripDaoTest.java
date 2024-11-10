@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.ComponentScan;
 
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -26,11 +27,11 @@ public class TripDaoTest {
 
     @Test
     public void findByCountryReturnsCorrectCountryById() {
-        User user = Generator.generateUser();
+        User user = Generator.generateUser(em);
         em.persist(user.getAddress());
         em.persist(user);
 
-        Trip trip = Generator.generateTrip(user);
+        Trip trip = Generator.generateTrip(user, em);
         em.persist(trip);
 
         final List<Trip> result = tripDao.findByCountry(trip.getCountry());

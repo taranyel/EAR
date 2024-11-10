@@ -13,9 +13,6 @@ public final class Constants {
 
     public static final RequestStatus DEFAULT_REQUEST_STATUS = RequestStatus.IN_PROGRESS;
 
-    public static final RequestStatus DEFAULT_REQUEST_STATUS_AFTER_OBJECT_CREATED = RequestStatus.CREATED;
-
-
     public static final AccountStatus DEFAULT_ACCOUNT_STATUS = AccountStatus.ACTIVE;
 
     private Constants() {
