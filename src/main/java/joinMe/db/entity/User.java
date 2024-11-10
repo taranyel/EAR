@@ -64,8 +64,7 @@ public class User extends AbstractEntity {
     @Column(name = "rating", nullable = false)
     private Integer rating;
 
-    @Basic(optional = false)
-    @Column(name = "image_path", nullable = false)
+    @Column(name = "image_path")
     private String imagePath;
 
     @ManyToOne(optional = false)

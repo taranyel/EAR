@@ -1,7 +1,7 @@
 package joinMe.db.entity;
 
 public enum RequestStatus {
-    APPROVED("APPROVED"), REJECTED("REJECTED"), IN_PROGRESS("IN_PROGRESS");
+    APPROVED("APPROVED"), REJECTED("REJECTED"), IN_PROGRESS("IN_PROGRESS"), CREATED("CREATED");
 
     private final String status;
 
