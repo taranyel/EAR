@@ -2,6 +2,7 @@ package joinMe.service;
 
 import joinMe.db.dao.AttendlistDao;
 import joinMe.db.dao.JoinRequestDao;
+import joinMe.db.dao.TripDao;
 import joinMe.db.dao.UserDao;
 import joinMe.db.entity.*;
 import joinMe.db.exception.JoinRequestException;
@@ -24,12 +25,15 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final TripDao tripDao;
+
     @Autowired
-    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao, PasswordEncoder passwordEncoder) {
+    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao, PasswordEncoder passwordEncoder, TripDao tripDao) {
         this.userDao = userDao;
         this.joinRequestDao = joinRequestDao;
         this.attendlistDao = attendlistDao;
         this.passwordEncoder = passwordEncoder;
+        this.tripDao = tripDao;
     }
 
     @Transactional
@@ -48,6 +52,7 @@ public class UserService {
 
         Attendlist attendlist = new Attendlist(user, trip);
         user.addAttendlist(attendlist);
+        attendlistDao.persist(attendlist);
         userDao.update(user);
     }
 
@@ -137,6 +142,10 @@ public class UserService {
         Objects.requireNonNull(user);
         Objects.requireNonNull(joinRequest);
 
+        if (joinRequest.getRequester() == null || joinRequest.getTrip() == null) {
+            throw new IllegalArgumentException("Fields in joinRequest can't be null!");
+        }
+
         User tripCreator = joinRequest.getTrip().getAuthor();
         if (user == tripCreator) {
             throw new JoinRequestException("User cannot create join request to the trip he is author of.");
@@ -147,7 +156,9 @@ public class UserService {
             throw new JoinRequestException("User cannot create more than one join request to one trip.");
         }
 
+        joinRequest.setStatus(RequestStatus.IN_PROGRESS);
         user.addJoinRequest(joinRequest);
+        joinRequestDao.persist(joinRequest);
         userDao.update(user);
     }
 
@@ -182,6 +193,7 @@ public class UserService {
         requester.addAttendlist(attendlist);
         joinRequest.setStatus(RequestStatus.APPROVED);
 
+        attendlistDao.persist(attendlist);
         joinRequestDao.update(joinRequest);
         userDao.update(requester);
     }
