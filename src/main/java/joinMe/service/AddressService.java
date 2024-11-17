@@ -24,14 +24,14 @@ public class AddressService {
         dao.persist(address);
     }
 
-    private void addResident(Address address, User resident) {
+    public void addResident(Address address, User resident) {
         Objects.requireNonNull(address);
         Objects.requireNonNull(resident);
         address.addResident(resident);
         dao.update(address);
     }
 
-    private void removeResident(Address address, User resident) {
+    public void removeResident(Address address, User resident) {
         Objects.requireNonNull(address);
         Objects.requireNonNull(resident);
         address.removeResident(resident);
