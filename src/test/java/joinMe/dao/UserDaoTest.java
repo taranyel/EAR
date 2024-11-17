@@ -34,6 +34,7 @@ public class UserDaoTest {
         assertEquals(user.getId(), result.getId());
     }
 
+    @Test
     public void findByUsernameReturnsNullForUnknownUsername() {
         assertNull(userDao.findByUsername("unknownUsername"));
     }

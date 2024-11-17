@@ -48,8 +48,7 @@ public class Generator {
         return RAND.nextBoolean();
     }
 
-    public static User generateUser(TestEntityManager em) {
-        final User user = new User();
+    public static Address generateAddress() {
         final Flat flat = new Flat();
         flat.setCity(randomString());
         flat.setStreet(randomString());
@@ -57,9 +56,30 @@ public class Generator {
         flat.setPostIndex(randomString());
         flat.setCountry(randomString());
 
+        return flat;
+    }
+
+    public static User generateUserWithoutAddress(TestEntityManager em) {
+        final User user = new User();
+
         user.setFirstName("FirstName" + randomInt());
         user.setLastName("LastName" + randomInt());
-//        user.setUsername("username" + randomInt() + "@kbss.felk.cvut.cz");
+        user.setUsername(randomString());
+        user.setPassword(Integer.toString(randomInt()));
+        user.setStatus(AccountStatus.ACTIVE);
+        user.setEmail(randomString());
+        user.setBirthdate(new Date());
+        user.setRating(0);
+
+        return user;
+    }
+
+    public static User generateUser(TestEntityManager em) {
+        final User user = new User();
+        final Address flat = generateAddress();
+
+        user.setFirstName("FirstName" + randomInt());
+        user.setLastName("LastName" + randomInt());
         user.setUsername(randomString());
         user.setPassword(Integer.toString(randomInt()));
         user.setAddress(flat);
@@ -103,6 +123,24 @@ public class Generator {
         for (int i = 0; i < value; i++) {
             buffer.add(generateTrip(author, em));
         }
+        return buffer;
+    }
+
+    public static Wishlist generateWishlist(User author, Trip trip, TestEntityManager em) {
+        Wishlist wishlist = new Wishlist();
+        wishlist.setOwner(author);
+        wishlist.setTrip(trip);
+        em.persist(wishlist);
+
+        return wishlist;
+    }
+
+    public static List<Wishlist> generateMultipleWithlist(int amount, User author, Trip trip, TestEntityManager em) {
+        List<Wishlist> buffer = new ArrayList<>();
+        for (int i = 0; i < amount; i++) {
+            buffer.add(generateWishlist(author, trip, em));
+        }
+
         return buffer;
     }
 }
