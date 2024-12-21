@@ -6,6 +6,7 @@ import joinMe.db.dao.TripDao;
 import joinMe.db.dao.UserDao;
 import joinMe.db.entity.*;
 import joinMe.db.exception.JoinRequestException;
+import joinMe.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -215,5 +216,35 @@ public class UserService {
     public void unblockUser(User user) {
         user.setStatus(AccountStatus.ACTIVE);
         userDao.update(user);
+    }
+
+    public List<Trip> getCurrentUserTrips() {
+        final User currentUser = SecurityUtils.getCurrentUser();
+        assert currentUser != null;
+        return currentUser.getTrips();
+    }
+
+    public List<Attendlist> getCurrentUserAttendLists() {
+        final User currentUser = SecurityUtils.getCurrentUser();
+        assert currentUser != null;
+        return currentUser.getAttendlists();
+    }
+
+    public List<Wishlist> getCurrentUserWishlists() {
+        final User currentUser = SecurityUtils.getCurrentUser();
+        assert currentUser != null;
+        return currentUser.getWishlists();
+    }
+
+    public List<JoinRequest> getCurrentUserJoinRequests() {
+        final User currentUser = SecurityUtils.getCurrentUser();
+        assert currentUser != null;
+        return currentUser.getJoinRequests();
+    }
+
+    public List<JoinRequest> getCurrentUserJoinRequestsForApproval() {
+        final User currentUser = SecurityUtils.getCurrentUser();
+        assert currentUser != null;
+        return joinRequestDao.getJoinRequestsForApproval(currentUser);
     }
 }

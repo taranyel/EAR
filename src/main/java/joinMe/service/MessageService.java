@@ -1,6 +1,7 @@
 package joinMe.service;
 
 import joinMe.db.dao.MessageDao;
+import joinMe.db.entity.Attendlist;
 import joinMe.db.entity.Message;
 import joinMe.db.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,5 +29,9 @@ public class MessageService {
 
     public List<Message> findByAuthor(User author) {
         return dao.findByAuthor(author);
+    }
+
+    public List<Message> findByAttendList(Attendlist attendlist) {
+        return dao.findByAttendList(attendlist);
     }
 }

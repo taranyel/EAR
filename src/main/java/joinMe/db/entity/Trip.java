@@ -1,6 +1,7 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import joinMe.util.Constants;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,6 +15,7 @@ import java.util.Objects;
 @Getter
 @Entity
 @NamedQueries({
+        @NamedQuery(name = "Trip.findByStatus", query = "SELECT t FROM Trip t WHERE t.status = :status"),
         @NamedQuery(name = "Trip.findByCountry", query = "SELECT t FROM Trip t WHERE t.country = :country"),
         @NamedQuery(name = "Trip.findByStartDate", query = "SELECT t FROM Trip t WHERE t.startDate = :startDate"),
         @NamedQuery(name = "Trip.findByEndDate", query = "SELECT t FROM Trip t WHERE t.endDate = :endDate"),
@@ -26,7 +28,12 @@ public class Trip extends AbstractEntity {
     public Trip() {
         created = LocalDateTime.now();
         comments = new ArrayList<>();
+        status = Constants.DEFAULT_TRIP_STATUS;
     }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private TripStatus status;
 
     @Basic(optional = false)
     @Column(name = "title", nullable = false)

@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import joinMe.db.dao.TripDao;
 import joinMe.db.entity.Comment;
 import joinMe.db.entity.Trip;
+import joinMe.db.entity.TripStatus;
 import joinMe.db.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,11 @@ public class TripService {
         Objects.requireNonNull(comment);
         trip.removeComment(comment);
         dao.update(trip);
+    }
+
+    @Transactional
+    public List<Trip> findAllActiveTrips() {
+        return dao.findByStatus(TripStatus.ACTIVE);
     }
 
     @Transactional

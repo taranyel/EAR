@@ -8,7 +8,8 @@ import lombok.Setter;
 @Getter
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "Message.findByAuthor", query = "SELECT m FROM Message m WHERE m.author = :author")
+        @NamedQuery(name = "Message.findByAuthor", query = "SELECT m FROM Message m WHERE m.author = :author"),
+        @NamedQuery(name = "Message.findByAttendList", query = "SELECT m FROM Message m WHERE m.attendlist = :attendlist")
 })
 public class Message extends AbstractEntity {
     @Basic(optional = false)

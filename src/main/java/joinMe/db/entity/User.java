@@ -91,6 +91,10 @@ public class User extends AbstractEntity {
         this.password = encoder.encode(password);
     }
 
+    public void erasePassword() {
+        this.password = null;
+    }
+
     public boolean isAdmin() {
         return role == Role.ADMIN;
     }
