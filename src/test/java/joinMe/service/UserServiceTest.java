@@ -74,7 +74,7 @@ public class UserServiceTest {
         JoinRequest joinRequest = new JoinRequest();
         joinRequest.setRequester(us);
         joinRequest.setTrip(trip);
-        userService.addJoinRequest(us, joinRequest);
+        userService.addJoinRequest(joinRequest);
         verify(joinRequestDao).persist(joinRequest);
         verify(userDao).update(us);
         userService.approveJoinRequest(joinRequest);
@@ -158,7 +158,7 @@ public class UserServiceTest {
         joinRequest.setTrip(trip);
 
         Exception exception = assertThrows(JoinRequestException.class, () -> {
-            userService.addJoinRequest(toAddUser, joinRequest);
+            userService.addJoinRequest(joinRequest);
         });
         assertEquals("User cannot create more than one join request to one trip.", exception.getMessage());
     }
@@ -199,7 +199,7 @@ public class UserServiceTest {
         em.persist(joinRequest);
 
         Exception exception = assertThrows(JoinRequestException.class, () -> {
-            userService.addJoinRequest(user, joinRequest);
+            userService.addJoinRequest(joinRequest);
         });
         assertEquals("User cannot create join request to the trip he is author of.", exception.getMessage());
     }
@@ -215,7 +215,7 @@ public class UserServiceTest {
         joinRequest.setRequester(us);
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.addJoinRequest(us, joinRequest);
+            userService.addJoinRequest(joinRequest);
         });
         assertEquals("Fields in joinRequest can't be null!", exception.getMessage());
     }

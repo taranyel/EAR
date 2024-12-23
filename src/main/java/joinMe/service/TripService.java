@@ -81,6 +81,11 @@ public class TripService {
     }
 
     @Transactional
+    public Trip findByID(Integer id) {
+        return dao.find(id);
+    }
+
+    @Transactional
     public List<Trip> findInWishlistByOwner(User owner) {
         Objects.requireNonNull(owner);
         return dao.findInWishlistByOwner(owner);

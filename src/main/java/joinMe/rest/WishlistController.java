@@ -1,5 +1,6 @@
 package joinMe.rest;
 
+import joinMe.db.entity.Trip;
 import joinMe.db.entity.Wishlist;
 import joinMe.service.UserService;
 import joinMe.service.WishlistService;
@@ -38,7 +39,13 @@ public class WishlistController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Wishlist> getWishlistsOfCurrentUser() {
-        return userService.getCurrentUserWishlists();
+    public List<Trip> getAllWishlists() {
+        return userService.getCurrentUserWishlists().stream()
+                .map(Wishlist::getTrip).toList();
+    }
+
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Trip getWishlist(@PathVariable int id) {
+
     }
 }

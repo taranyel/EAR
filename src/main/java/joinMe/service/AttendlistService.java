@@ -41,4 +41,9 @@ public class AttendlistService {
     public List<Attendlist> findByJoiner(User joiner) {
         return dao.findByJoiner(joiner);
     }
+
+    @Transactional
+    public Attendlist findByID(Integer id) {
+        return dao.find(id);
+    }
 }

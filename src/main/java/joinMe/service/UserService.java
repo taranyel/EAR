@@ -139,17 +139,13 @@ public class UserService {
     }
 
     @Transactional
-    public void addJoinRequest(User user, JoinRequest joinRequest) {
-        Objects.requireNonNull(user);
+    public void addJoinRequest(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
 
-        if (joinRequest.getRequester() == null || joinRequest.getTrip() == null) {
-            throw new IllegalArgumentException("Fields in joinRequest can't be null!");
-        }
-
+        User requester = joinRequest.getRequester();
         User tripCreator = joinRequest.getTrip().getAuthor();
-        if (user == tripCreator) {
-            throw new JoinRequestException("User cannot create join request to the trip he is author of.");
+        if (requester == tripCreator) {
+            throw new JoinRequestException("User cannot create join request to the trip he/she is author of.");
         }
 
         JoinRequest existingRequest = joinRequestDao.findByRequesterAndTrip(joinRequest.getRequester(), joinRequest.getTrip());
@@ -157,10 +153,9 @@ public class UserService {
             throw new JoinRequestException("User cannot create more than one join request to one trip.");
         }
 
-        joinRequest.setStatus(RequestStatus.IN_PROGRESS);
-        user.addJoinRequest(joinRequest);
+        requester.addJoinRequest(joinRequest);
         joinRequestDao.persist(joinRequest);
-        userDao.update(user);
+        userDao.update(requester);
     }
 
     @Transactional
@@ -179,10 +174,6 @@ public class UserService {
     @Transactional
     public List<User> getAllJoinersOfAttendlist(Trip trip) {
         return userDao.getAllJoinersOfAttendlist(trip);
-    }
-
-    public List<Attendlist> getAllAttendlists(User user) {
-        return user.getAttendlists();
     }
 
     @Transactional
