@@ -1,6 +1,7 @@
 package joinMe.service;
 
 import joinMe.db.dao.ComplaintDao;
+import joinMe.db.entity.Attendlist;
 import joinMe.db.entity.Complaint;
 import joinMe.db.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,5 +28,10 @@ public class ComplaintService {
 
     public List<Complaint> findByAccused(User accused) {
         return dao.findByAccused(accused);
+    }
+
+    @Transactional
+    public Complaint findByID(Integer id) {
+        return dao.find(id);
     }
 }

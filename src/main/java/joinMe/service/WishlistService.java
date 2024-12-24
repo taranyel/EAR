@@ -2,6 +2,7 @@ package joinMe.service;
 
 import jakarta.transaction.Transactional;
 import joinMe.db.dao.WishlistDao;
+import joinMe.db.entity.Trip;
 import joinMe.db.entity.Wishlist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,5 +23,10 @@ public class WishlistService {
     public void persist(Wishlist wishlist) {
         Objects.requireNonNull(wishlist);
         dao.persist(wishlist);
+    }
+
+    @Transactional
+    public Wishlist findByID(Integer id) {
+        return dao.find(id);
     }
 }

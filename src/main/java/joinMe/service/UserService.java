@@ -141,20 +141,8 @@ public class UserService {
     @Transactional
     public void addJoinRequest(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
-
         User requester = joinRequest.getRequester();
-        User tripCreator = joinRequest.getTrip().getAuthor();
-        if (requester == tripCreator) {
-            throw new JoinRequestException("User cannot create join request to the trip he/she is author of.");
-        }
-
-        JoinRequest existingRequest = joinRequestDao.findByRequesterAndTrip(joinRequest.getRequester(), joinRequest.getTrip());
-        if (existingRequest != null && existingRequest.getStatus() != RequestStatus.REJECTED) {
-            throw new JoinRequestException("User cannot create more than one join request to one trip.");
-        }
-
         requester.addJoinRequest(joinRequest);
-        joinRequestDao.persist(joinRequest);
         userDao.update(requester);
     }
 
@@ -237,5 +225,11 @@ public class UserService {
         final User currentUser = SecurityUtils.getCurrentUser();
         assert currentUser != null;
         return joinRequestDao.getJoinRequestsForApproval(currentUser);
+    }
+
+    public List<Complaint> getComplaintsToCurrentUser() {
+        final User currentUser = SecurityUtils.getCurrentUser();
+        assert currentUser != null;
+        return currentUser.getComplaints();
     }
 }

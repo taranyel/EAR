@@ -41,7 +41,7 @@ public class TripController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> createTrip(@RequestBody Trip trip) {
         tripService.persist(trip);
-        LOG.debug("Created product {}.", trip);
+        LOG.debug("Created trip {}.", trip);
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", trip.getId());
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
@@ -49,7 +49,7 @@ public class TripController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
     @DeleteMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void deleteTrip(Authentication auth, @PathVariable int id) {
-        final Trip trip = tripService.findByID(id);
+        Trip trip = tripService.findByID(id);
         if (trip == null) {
             throw NotFoundException.create("Trip", id);
         }
@@ -74,7 +74,7 @@ public class TripController {
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Trip getTrip(@PathVariable int id) {
-        final Trip trip = tripService.findByID(id);
+        Trip trip = tripService.findByID(id);
         if (trip == null) {
             throw NotFoundException.create("Trip", id);
         }
