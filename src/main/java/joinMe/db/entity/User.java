@@ -13,7 +13,7 @@ import java.util.*;
 @Entity
 @Table(name = "EAR_USER")
 @NamedQueries({
-        @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username"),
+        @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email = :email"),
         @NamedQuery(name = "User.getAllJoinersOfAttendlist", query = "SELECT a.joiner FROM Attendlist a WHERE a.trip = :trip"),
 })
 public class User extends AbstractEntity {
@@ -26,6 +26,8 @@ public class User extends AbstractEntity {
         complaints = new ArrayList<>();
         attendlists = new ArrayList<>();
         joinRequests = new ArrayList<>();
+        imagePath = null;
+        rating = 0;
     }
 
     @Basic(optional = false)

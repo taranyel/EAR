@@ -26,15 +26,13 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final TripDao tripDao;
 
     @Autowired
-    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao, PasswordEncoder passwordEncoder, TripDao tripDao) {
+    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao, PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
         this.joinRequestDao = joinRequestDao;
         this.attendlistDao = attendlistDao;
         this.passwordEncoder = passwordEncoder;
-        this.tripDao = tripDao;
     }
 
     @Transactional
@@ -155,8 +153,8 @@ public class UserService {
     }
 
     @Transactional
-    public User findByUsername(String username) {
-        return userDao.findByUsername(username);
+    public boolean exists(String email) {
+        return userDao.findByUsername(email) != null;
     }
 
     @Transactional

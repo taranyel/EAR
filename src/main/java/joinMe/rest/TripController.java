@@ -62,8 +62,10 @@ public class TripController {
         userService.removeTrip(user, trip);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Trip> getAllActiveTrips() {
+        LOG.info("Retrieving all active trips.");
         return tripService.findAllActiveTrips();
     }
 
