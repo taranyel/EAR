@@ -24,7 +24,7 @@ public class Attendlist extends AbstractEntity{
         messages = new ArrayList<>();
     }
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinColumn(name = "attendlist_id")
     private List<Message> messages;
 

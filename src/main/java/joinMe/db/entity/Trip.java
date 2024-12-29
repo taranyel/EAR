@@ -28,6 +28,7 @@ public class Trip extends AbstractEntity {
     public Trip() {
         created = LocalDateTime.now();
         comments = new ArrayList<>();
+        attendlists = new ArrayList<>();
         status = Constants.DEFAULT_TRIP_STATUS;
     }
 
@@ -71,9 +72,13 @@ public class Trip extends AbstractEntity {
     @JoinColumn(nullable = false)
     private User author;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinColumn(name = "trip_id")
     private List<Comment> comments;
+
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JoinColumn(name = "trip_id")
+    private List<Attendlist> attendlists;
 
     public void addComment(Comment comment) {
         Objects.requireNonNull(comment);

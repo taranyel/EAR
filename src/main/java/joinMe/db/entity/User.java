@@ -14,7 +14,8 @@ import java.util.*;
 @Table(name = "EAR_USER")
 @NamedQueries({
         @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username"),
-        @NamedQuery(name = "User.getAllJoinersOfAttendlist", query = "SELECT a.joiner FROM Attendlist a WHERE a.trip = :trip"),
+        @NamedQuery(name = "User.getAllJoinersOfAttendlistByTrip", query = "SELECT a.joiner FROM Attendlist a WHERE a.trip = :trip"),
+        @NamedQuery(name = "User.getAllJoinersOfAttendlistById", query = "SELECT a.joiner FROM Attendlist a WHERE a.id = :id")
 })
 public class User extends AbstractEntity {
 
@@ -69,24 +70,24 @@ public class User extends AbstractEntity {
     @Column(name = "image_path")
     private String imagePath;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.PERSIST)
     @JoinColumn(nullable = false)
     private Address address;
 
-    @OneToMany(mappedBy = "accused")
+    @OneToMany(mappedBy = "accused", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Complaint> complaints;
 
     @OneToMany(mappedBy = "joiner")
     private List<Attendlist> attendlists;
 
-    @OneToMany(mappedBy = "author")
+    @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @OrderBy("created")
     private List<Trip> trips;
 
-    @OneToMany(mappedBy = "owner")
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Wishlist> wishlists;
 
-    @OneToMany(mappedBy = "requester")
+    @OneToMany(mappedBy = "requester", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<JoinRequest> joinRequests;
 
     public void encodePassword(PasswordEncoder encoder) {

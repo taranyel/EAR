@@ -38,8 +38,12 @@ public class ComplaintController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> createComplaint(@RequestBody Complaint complaint) {
+    public ResponseEntity<Void> createComplaint(Authentication auth, @RequestBody Complaint complaint) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+
         complaintService.persist(complaint);
+        userService.addComplaint(user, complaint);
         LOG.debug("Created complaint {}.", complaint);
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", complaint.getId());
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
@@ -48,12 +52,13 @@ public class ComplaintController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @DeleteMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void deleteComplaint(Authentication auth, @PathVariable int id) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+
         Complaint complaint = complaintService.findByID(id);
         if (complaint == null) {
             throw NotFoundException.create("Compaint", id);
         }
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
 
         if (user.getRole() != Role.ADMIN) {
             throw new AccessDeniedException("Cannot access complaint without ADMIN role.");
@@ -62,7 +67,9 @@ public class ComplaintController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Complaint> getComplaintsToCurrentUser() {
-        return userService.getComplaintsToCurrentUser();
+    public List<Complaint> getComplaintsToCurrentUser(Authentication auth) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        return user.getComplaints();
     }
 }

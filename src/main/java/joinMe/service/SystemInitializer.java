@@ -63,7 +63,11 @@ public class SystemInitializer {
         admin.setLastName("Administrator");
         admin.setPassword("admin");
         admin.setRole(Role.ADMIN);
-        admin.setAddress(getAddress());
+
+        Address address = getAddress();
+        address.addResident(admin);
+        admin.setAddress(address);
+
         admin.setBirthdate(new Date(2004, Calendar.MARCH, 4));
         LOG.info("Generated admin user with credentials " + admin.getUsername() + "/" + admin.getPassword());
         userService.persist(admin);
@@ -76,7 +80,7 @@ public class SystemInitializer {
         address.setCountry("Country");
         address.setNumber("1");
         address.setPostIndex("12345");
-        addressService.persist(address);
+        //addressService.persist(address);
         return address;
     }
 }

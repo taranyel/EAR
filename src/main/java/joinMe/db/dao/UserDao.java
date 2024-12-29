@@ -22,9 +22,18 @@ public class UserDao extends BaseDao<User>{
         }
     }
 
-    public List<User> getAllJoinersOfAttendlist(Trip trip) {
+    public List<User> getAllJoinersOfAttendlistByTrip(Trip trip) {
         try {
-            return em.createNamedQuery("User.getAllJoinersOfAttendlist", User.class).setParameter("trip", trip)
+            return em.createNamedQuery("User.getAllJoinersOfAttendlistByTrip", User.class).setParameter("trip", trip)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public List<User> getAllJoinersOfAttendlistByID(Integer id) {
+        try {
+            return em.createNamedQuery("User.getAllJoinersOfAttendlistById", User.class).setParameter("id", id)
                     .getResultList();
         } catch (NoResultException e) {
             return null;

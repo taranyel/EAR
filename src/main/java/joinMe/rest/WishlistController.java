@@ -1,6 +1,5 @@
 package joinMe.rest;
 
-import joinMe.db.entity.Role;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
 import joinMe.db.entity.Wishlist;
@@ -40,7 +39,11 @@ public class WishlistController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> createWishlist(@RequestBody Wishlist wishlist) {
+    public ResponseEntity<Void> createWishlist(Authentication auth, @RequestBody Wishlist wishlist) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+
+        userService.addWishlist(user, wishlist);
         wishlistService.persist(wishlist);
         LOG.debug("Created wishlist {}.", wishlist);
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", wishlist.getId());
@@ -57,8 +60,11 @@ public class WishlistController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Trip> getAllWishlists() {
-        return userService.getCurrentUserWishlists().stream()
+    public List<Trip> getAllWishlists(Authentication auth) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+
+        return user.getWishlists().stream()
                 .map(Wishlist::getTrip).toList();
     }
 
@@ -75,7 +81,7 @@ public class WishlistController {
             throw NotFoundException.create("Wishlist", id);
         }
 
-        if (user.getRole() != Role.ADMIN && !wishlist.getOwner().getId().equals(user.getId())) {
+        if (!wishlist.getOwner().getId().equals(user.getId())) {
             throw new AccessDeniedException("Cannot access wishlist of another user.");
         }
         return wishlist;

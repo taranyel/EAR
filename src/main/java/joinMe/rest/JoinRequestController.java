@@ -41,8 +41,12 @@ public class JoinRequestController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> createJoinRequest(Authentication auth, @RequestBody Trip trip) {
+        assert auth.getPrincipal() instanceof UserDetails;
         User user = ((UserDetails) auth.getPrincipal()).getUser();
+
         JoinRequest joinRequest = joinRequestService.create(user, trip);
+        userService.addJoinRequest(joinRequest);
+
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", joinRequest.getId());
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
@@ -60,7 +64,40 @@ public class JoinRequestController {
         return joinRequest;
     }
 
-    private JoinRequest getJoinRequestForApproval(User user, int id) {
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
+    @DeleteMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void cancelJoinRequest(Authentication auth, @PathVariable int id) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        JoinRequest joinRequest = getJoinRequestForRequester(user, id);
+        userService.cancelJoinRequest(user, joinRequest);
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<JoinRequest> getAllJoinRequests(Authentication auth) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        return user.getJoinRequests();
+    }
+
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public JoinRequest getJoinRequest(Authentication auth, @PathVariable Integer id) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        return getJoinRequestForRequester(user, id);
+    }
+
+    @GetMapping(value = "/forApproval", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<JoinRequest> getAllJoinRequestsForApproval(Authentication auth) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        return joinRequestService.getJoinRequestsForApproval(user);
+    }
+
+    @GetMapping(value = "/forApproval/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public JoinRequest getJoinRequestForApprovalByID(Authentication auth, @PathVariable Integer id) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        User user = ((UserDetails) auth.getPrincipal()).getUser();
         JoinRequest joinRequest = joinRequestService.findByID(id);
         if (joinRequest == null) {
             throw NotFoundException.create("JoinRequest", id);
@@ -73,52 +110,15 @@ public class JoinRequestController {
         return joinRequest;
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
-    @DeleteMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void cancelJoinRequest(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        JoinRequest joinRequest = getJoinRequestForRequester(user, id);
-        userService.removeJoinRequest(user, joinRequest);
-    }
-
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<JoinRequest> getAllJoinRequests() {
-        return userService.getCurrentUserJoinRequests();
-    }
-
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public JoinRequest getJoinRequest(Authentication auth, @PathVariable Integer id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        return getJoinRequestForRequester(user, id);
-    }
-
-    @GetMapping(value = "/forApproval", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<JoinRequest> getAllJoinRequestsForApproval() {
-        return userService.getCurrentUserJoinRequestsForApproval();
-    }
-
-    @GetMapping(value = "/forApproval/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public JoinRequest getJoinRequestForApprovalByID(Authentication auth, @PathVariable Integer id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        return getJoinRequestForApproval(user, id);
-    }
-
     @GetMapping(value = "/approve/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public void approveJoinRequest(Authentication auth, @PathVariable Integer id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        JoinRequest joinRequest = getJoinRequestForApproval(user, id);
+        JoinRequest joinRequest = getJoinRequestForApprovalByID(auth, id);
         userService.approveJoinRequest(joinRequest);
     }
 
     @GetMapping(value = "/reject/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public void rejectJoinRequest(Authentication auth, @PathVariable Integer id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        JoinRequest joinRequest = getJoinRequestForApproval(user, id);
+        JoinRequest joinRequest = getJoinRequestForApprovalByID(auth, id);
         userService.rejectJoinRequest(joinRequest);
     }
 }

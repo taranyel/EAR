@@ -1,11 +1,8 @@
 package joinMe.service;
 
-import joinMe.db.dao.AttendlistDao;
-import joinMe.db.dao.JoinRequestDao;
-import joinMe.db.dao.UserDao;
+import joinMe.db.dao.*;
 import joinMe.db.entity.*;
 import joinMe.db.exception.JoinRequestException;
-import joinMe.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,12 +22,22 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final ComplaintDao complaintDao;
+
+    private final WishlistDao wishlistDao;
+
+    private final TripDao tripDao;
+
 
     @Autowired
-    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao, PasswordEncoder passwordEncoder) {
+    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao,
+                       ComplaintDao complaintDao, WishlistDao wishlistDao, TripDao tripDao, PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
         this.joinRequestDao = joinRequestDao;
         this.attendlistDao = attendlistDao;
+        this.complaintDao = complaintDao;
+        this.wishlistDao = wishlistDao;
+        this.tripDao = tripDao;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -46,11 +53,8 @@ public class UserService {
     public void addTrip(User user, Trip trip) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
+        trip.setAuthor(user);
         user.addTrip(trip);
-
-        Attendlist attendlist = new Attendlist(user, trip);
-        user.addAttendlist(attendlist);
-        attendlistDao.persist(attendlist);
         userDao.update(user);
     }
 
@@ -59,14 +63,6 @@ public class UserService {
     public void removeTrip(User user, Trip trip) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
-
-        List<User> joiners = userDao.getAllJoinersOfAttendlist(trip);
-        for (User joiner : joiners) {
-            Attendlist attendlist = attendlistDao.findByTripAndJoiner(trip, joiner);
-            joiner.removeAttendlist(attendlist);
-            userDao.update(joiner);
-        }
-
         user.removeTrip(trip);
         userDao.update(user);
     }
@@ -85,6 +81,7 @@ public class UserService {
         Objects.requireNonNull(wishlist);
         user.removeWishlist(wishlist);
         userDao.update(user);
+        wishlistDao.remove(wishlist);
     }
 
     @Transactional
@@ -101,6 +98,7 @@ public class UserService {
         Objects.requireNonNull(complaint);
         user.removeComplaint(complaint);
         userDao.update(user);
+        complaintDao.remove(complaint);
     }
 
     @Transactional
@@ -128,7 +126,7 @@ public class UserService {
     }
 
     @Transactional
-    public void removeAttendlist(User user, Attendlist attendlist) {
+    public void leaveAttendlist(User user, Attendlist attendlist) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(attendlist);
         user.removeAttendlist(attendlist);
@@ -144,11 +142,12 @@ public class UserService {
     }
 
     @Transactional
-    public void removeJoinRequest(User user, JoinRequest joinRequest) {
+    public void cancelJoinRequest(User user, JoinRequest joinRequest) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(joinRequest);
         user.removeJoinRequest(joinRequest);
         userDao.update(user);
+        joinRequestDao.remove(joinRequest);
     }
 
     @Transactional
@@ -157,8 +156,8 @@ public class UserService {
     }
 
     @Transactional
-    public List<User> getAllJoinersOfAttendlist(Trip trip) {
-        return userDao.getAllJoinersOfAttendlist(trip);
+    public List<User> getAllJoinersOfAttendlistByID(Integer id) {
+        return userDao.getAllJoinersOfAttendlistByID(id);
     }
 
     @Transactional
@@ -192,41 +191,5 @@ public class UserService {
     public void unblockUser(User user) {
         user.setStatus(AccountStatus.ACTIVE);
         userDao.update(user);
-    }
-
-    public List<Trip> getCurrentUserTrips() {
-        final User currentUser = SecurityUtils.getCurrentUser();
-        assert currentUser != null;
-        return currentUser.getTrips();
-    }
-
-    public List<Attendlist> getCurrentUserAttendLists() {
-        final User currentUser = SecurityUtils.getCurrentUser();
-        assert currentUser != null;
-        return currentUser.getAttendlists();
-    }
-
-    public List<Wishlist> getCurrentUserWishlists() {
-        final User currentUser = SecurityUtils.getCurrentUser();
-        assert currentUser != null;
-        return currentUser.getWishlists();
-    }
-
-    public List<JoinRequest> getCurrentUserJoinRequests() {
-        final User currentUser = SecurityUtils.getCurrentUser();
-        assert currentUser != null;
-        return currentUser.getJoinRequests();
-    }
-
-    public List<JoinRequest> getCurrentUserJoinRequestsForApproval() {
-        final User currentUser = SecurityUtils.getCurrentUser();
-        assert currentUser != null;
-        return joinRequestDao.getJoinRequestsForApproval(currentUser);
-    }
-
-    public List<Complaint> getComplaintsToCurrentUser() {
-        final User currentUser = SecurityUtils.getCurrentUser();
-        assert currentUser != null;
-        return currentUser.getComplaints();
     }
 }
