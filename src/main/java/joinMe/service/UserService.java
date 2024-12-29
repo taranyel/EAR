@@ -2,7 +2,6 @@ package joinMe.service;
 
 import joinMe.db.dao.AttendlistDao;
 import joinMe.db.dao.JoinRequestDao;
-import joinMe.db.dao.TripDao;
 import joinMe.db.dao.UserDao;
 import joinMe.db.entity.*;
 import joinMe.db.exception.JoinRequestException;

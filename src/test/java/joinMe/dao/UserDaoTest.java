@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,7 +23,7 @@ public class UserDaoTest {
     private UserDao userDao;
 
     @Test
-    public void findByUsernameReturnsPersonWithMatchingUsername() {
+    public void findByUsernameReturnsPersonWithMatchingEmail() {
         final User user = Generator.generateUser(em);
         em.persist(user.getAddress());
         em.persist(user);
@@ -35,7 +34,7 @@ public class UserDaoTest {
     }
 
     @Test
-    public void findByUsernameReturnsNullForUnknownUsername() {
+    public void findByUsernameReturnsNullForUnknownEmail() {
         assertNull(userDao.findByUsername("unknownUsername"));
     }
 }

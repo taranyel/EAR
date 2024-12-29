@@ -23,7 +23,7 @@ public class SystemInitializer {
     /**
      * Default admin username
      */
-    private static final String ADMIN_EMAIL = "ear-admin@kbss.felk.cvut.cz";
+    private static final String ADMIN_USERNAME = "admin";
 
     private final UserService userService;
 
@@ -53,19 +53,19 @@ public class SystemInitializer {
      * Generates an admin account if it does not already exist.
      */
     private void generateAdmin() {
-        if (userService.exists(ADMIN_EMAIL)) {
+        if (userService.exists(ADMIN_USERNAME)) {
             return;
         }
         User admin = new User();
-        admin.setEmail(ADMIN_EMAIL);
-        admin.setUsername(ADMIN_EMAIL);
+        admin.setEmail(ADMIN_USERNAME);
+        admin.setUsername(ADMIN_USERNAME);
         admin.setFirstName("System");
         admin.setLastName("Administrator");
-        admin.setPassword("adm1n");
+        admin.setPassword("admin");
         admin.setRole(Role.ADMIN);
         admin.setAddress(getAddress());
         admin.setBirthdate(new Date(2004, Calendar.MARCH, 4));
-        LOG.info("Generated admin user with credentials " + admin.getEmail() + "/" + admin.getPassword());
+        LOG.info("Generated admin user with credentials " + admin.getUsername() + "/" + admin.getPassword());
         userService.persist(admin);
     }
 
