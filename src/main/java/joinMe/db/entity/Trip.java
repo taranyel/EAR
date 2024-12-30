@@ -3,12 +3,11 @@ package joinMe.db.entity;
 import jakarta.persistence.*;
 import joinMe.util.Constants;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,13 +26,10 @@ import java.util.Objects;
 public class Trip extends AbstractEntity {
 
     public Trip() {
-        comments = new ArrayList<>();
-        attendlists = new ArrayList<>();
-        status = Constants.DEFAULT_TRIP_STATUS;
-        created = LocalDateTime.now();
+        init();
     }
 
-    public Trip(String title, User author, Integer capacity, String country, String description, Date endDate, String imagePath, Date startDate) {
+    public Trip(String title, User author, Integer capacity, String country, String description, LocalDate endDate, String imagePath, LocalDate startDate) {
         this.title = title;
         this.author = author;
         this.capacity = capacity;
@@ -42,6 +38,10 @@ public class Trip extends AbstractEntity {
         this.endDate = endDate;
         this.imagePath = imagePath;
         this.startDate = startDate;
+        init();
+    }
+
+    private void init() {
         created = LocalDateTime.now();
         comments = new ArrayList<>();
         attendlists = new ArrayList<>();
@@ -74,11 +74,11 @@ public class Trip extends AbstractEntity {
 
     @Basic(optional = false)
     @Column(name = "start_date", nullable = false)
-    private Date startDate;
+    private LocalDate startDate;
 
     @Basic(optional = false)
     @Column(name = "end_date", nullable = false)
-    private Date endDate;
+    private LocalDate endDate;
 
     @Basic(optional = false)
     @Column(name = "created", nullable = false)

@@ -3,11 +3,13 @@ package joinMe.db.entity;
 import jakarta.persistence.*;
 import joinMe.util.Constants;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Setter
 @Getter
@@ -21,17 +23,10 @@ import java.util.*;
 public class User extends AbstractEntity {
 
     public User() {
-        trips = new ArrayList<>();
-        wishlists = new ArrayList<>();
-        complaints = new ArrayList<>();
-        attendlists = new ArrayList<>();
-        joinRequests = new ArrayList<>();
-        rating = 0;
-        role = Constants.DEFAULT_ROLE;
-        status = Constants.DEFAULT_ACCOUNT_STATUS;
+        init();
     }
 
-    public User(Address address, Date birthdate, String email, String firstName, String imagePath, String lastName, String password, String username) {
+    public User(Address address, LocalDate birthdate, String email, String firstName, String imagePath, String lastName, String password, String username) {
         this.address = address;
         this.birthdate = birthdate;
         this.email = email;
@@ -40,6 +35,10 @@ public class User extends AbstractEntity {
         this.lastName = lastName;
         this.password = password;
         this.username = username;
+        init();
+    }
+
+    private void init() {
         trips = new ArrayList<>();
         role = Constants.DEFAULT_ROLE;
         status = Constants.DEFAULT_ACCOUNT_STATUS;
@@ -80,7 +79,7 @@ public class User extends AbstractEntity {
 
     @Basic(optional = false)
     @Column(name = "birthdate", nullable = false)
-    private Date birthdate;
+    private LocalDate birthdate;
 
     @Basic(optional = false)
     @Column(name = "rating", nullable = false)

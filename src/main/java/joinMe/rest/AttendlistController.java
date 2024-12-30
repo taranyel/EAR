@@ -77,10 +77,12 @@ public class AttendlistController {
     }
 
     @PostMapping(value = "/{attendlistID}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> addMessage(Authentication auth, @PathVariable int attendlistID, @RequestBody Message message) {
+    public ResponseEntity<Void> addMessage(Authentication auth, @PathVariable int attendlistID, @RequestBody MessageDTO messageDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
         Attendlist attendlist = getAttendlist(user, attendlistID);
+
+        Message message = mapper.toEntity(messageDTO);
 
         if (attendlistID != message.getAttendlist().getId() || !Objects.equals(message.getAuthor().getId(), user.getId())) {
             throw new AccessDeniedException("Wrong attendlist or you are not author of the message.");
@@ -88,11 +90,11 @@ public class AttendlistController {
 
         attendlistService.addMessage(attendlist, message);
         messageService.persist(message);
-        LOG.debug("Added message {}.", message);
+        LOG.debug("Added message {}.", messageDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @DeleteMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/{id}")
     public void leaveAttendlist(Authentication auth, @PathVariable int id) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();

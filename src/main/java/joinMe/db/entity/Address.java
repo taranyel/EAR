@@ -2,7 +2,6 @@ package joinMe.db.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -15,7 +14,7 @@ import java.util.Objects;
 public abstract class Address extends AbstractEntity {
 
     public Address() {
-        this.residents = new ArrayList<>();
+        init();
     }
 
     public Address(String city, String country, String number, String postIndex, String street) {
@@ -24,6 +23,10 @@ public abstract class Address extends AbstractEntity {
         this.number = number;
         this.postIndex = postIndex;
         this.street = street;
+        init();
+    }
+
+    private void init() {
         this.residents = new ArrayList<>();
     }
 

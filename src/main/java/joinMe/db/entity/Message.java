@@ -22,7 +22,7 @@ public class Message extends AbstractEntity {
     }
 
     @Basic(optional = false)
-    @Column(name="text", nullable = false)
+    @Column(name = "text", nullable = false)
     private String text;
 
     @ManyToOne

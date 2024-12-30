@@ -4,6 +4,8 @@ import joinMe.db.entity.Complaint;
 import joinMe.db.entity.Role;
 import joinMe.db.entity.User;
 import joinMe.db.exception.NotFoundException;
+import joinMe.rest.dto.ComplaintDTO;
+import joinMe.rest.dto.Mapper;
 import joinMe.rest.util.RestUtils;
 import joinMe.security.model.UserDetails;
 import joinMe.service.ComplaintService;
@@ -31,26 +33,32 @@ public class ComplaintController {
 
     private final UserService userService;
 
+    private final Mapper mapper;
+
     @Autowired
-    public ComplaintController(ComplaintService complaintService, UserService userService) {
+    public ComplaintController(ComplaintService complaintService, UserService userService, Mapper mapper) {
         this.complaintService = complaintService;
         this.userService = userService;
+        this.mapper = mapper;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> createComplaint(Authentication auth, @RequestBody Complaint complaint) {
+    public ResponseEntity<Void> createComplaint(Authentication auth, @RequestBody ComplaintDTO complaintDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
 
+        Complaint complaint = mapper.toEntity(complaintDTO);
+
         complaintService.persist(complaint);
         userService.addComplaint(user, complaint);
-        LOG.debug("Created complaint {}.", complaint);
+
+        LOG.debug("Created complaint {}.", complaintDTO);
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", complaint.getId());
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
-    @DeleteMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/{id}")
     public void deleteComplaint(Authentication auth, @PathVariable int id) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
@@ -67,9 +75,12 @@ public class ComplaintController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Complaint> getComplaintsToCurrentUser(Authentication auth) {
+    public List<ComplaintDTO> getComplaintsToCurrentUser(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        return user.getComplaints();
+        return user.getComplaints()
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 }

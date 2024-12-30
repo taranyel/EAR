@@ -2,7 +2,6 @@ package joinMe.db.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -19,12 +18,16 @@ import java.util.Objects;
 public class Attendlist extends AbstractEntity{
 
     public Attendlist() {
-        messages = new ArrayList<>();
+        init();
     }
 
     public Attendlist(User joiner, Trip trip) {
         this.joiner = joiner;
         this.trip = trip;
+        init();
+    }
+
+    private void init() {
         messages = new ArrayList<>();
     }
 
@@ -43,11 +46,6 @@ public class Attendlist extends AbstractEntity{
     public void addMessage(Message message) {
         Objects.requireNonNull(message);
         messages.add(message);
-    }
-
-    public void removeMessages(Message message) {
-        Objects.requireNonNull(message);
-        messages.remove(message);
     }
 
     public User getAdmin() {

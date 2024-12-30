@@ -12,4 +12,5 @@ import lombok.Setter;
 public class CommentDTO {
     private UserDTO author;
     private String text;
+    private TripDTO trip;
 }

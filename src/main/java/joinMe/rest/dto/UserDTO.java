@@ -20,4 +20,5 @@ public class UserDTO {
     private String rating;
     private String imagePath;
     private String password;
+    private AddressDTO address;
 }

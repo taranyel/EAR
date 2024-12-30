@@ -36,13 +36,14 @@ public class UserController {
     /**
      * Registers a new user.
      *
-     * @param user User data
+     * @param userDTO User data
      */
-    @PreAuthorize("(!#user.isAdmin() && anonymous) || hasRole('ROLE_ADMIN')")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> register(@RequestBody User user) {
+    public ResponseEntity<Void> register(@RequestBody UserDTO userDTO) {
+        User user = mapper.toEntity(userDTO);
+
         userService.persist(user);
-        LOG.debug("User {} successfully registered.", user);
+        LOG.debug("User {} successfully registered.", userDTO);
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }

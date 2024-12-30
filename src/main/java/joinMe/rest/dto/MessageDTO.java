@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class MessageDTO {
+    private AttendlistDTO attendlist;
     private UserDTO author;
     private String text;
 }

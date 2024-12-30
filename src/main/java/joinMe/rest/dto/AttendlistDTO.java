@@ -10,5 +10,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class AttendlistDTO {
+    private UserDTO joiner;
     private TripDTO trip;
 }
