@@ -26,18 +26,15 @@ public class UserService {
 
     private final WishlistDao wishlistDao;
 
-    private final TripDao tripDao;
-
 
     @Autowired
     public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao,
-                       ComplaintDao complaintDao, WishlistDao wishlistDao, TripDao tripDao, PasswordEncoder passwordEncoder) {
+                       ComplaintDao complaintDao, WishlistDao wishlistDao, PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
         this.joinRequestDao = joinRequestDao;
         this.attendlistDao = attendlistDao;
         this.complaintDao = complaintDao;
         this.wishlistDao = wishlistDao;
-        this.tripDao = tripDao;
         this.passwordEncoder = passwordEncoder;
     }
 

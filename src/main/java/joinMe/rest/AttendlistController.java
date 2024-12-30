@@ -1,7 +1,13 @@
 package joinMe.rest;
 
-import joinMe.db.entity.*;
+import joinMe.db.entity.Attendlist;
+import joinMe.db.entity.Message;
+import joinMe.db.entity.User;
 import joinMe.db.exception.NotFoundException;
+import joinMe.rest.dto.AttendlistDTO;
+import joinMe.rest.dto.Mapper;
+import joinMe.rest.dto.MessageDTO;
+import joinMe.rest.dto.UserDTO;
 import joinMe.security.model.UserDetails;
 import joinMe.service.AttendlistService;
 import joinMe.service.MessageService;
@@ -31,31 +37,43 @@ public class AttendlistController {
 
     private final UserService userService;
 
+    private final Mapper mapper;
+
     @Autowired
-    public AttendlistController(AttendlistService attendlistService, MessageService messageService, UserService userService) {
+    public AttendlistController(AttendlistService attendlistService, MessageService messageService, UserService userService, Mapper mapper) {
         this.attendlistService = attendlistService;
         this.messageService = messageService;
         this.userService = userService;
+        this.mapper = mapper;
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Attendlist> getCurrentUserAttendLists(Authentication auth) {
+    public List<AttendlistDTO> getCurrentUserAttendLists(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        return user.getAttendlists();
+        return user.getAttendlists()
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Message> getAttendList(Authentication auth, @PathVariable Integer id) {
+    public List<MessageDTO> getAttendList(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        return getAttendlist(user, id).getMessages();
+        return getAttendlist(user, id).getMessages()
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
     @GetMapping(value = "/{id}/users", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<User> getAllJoinersOfAttendlist(Authentication auth, @PathVariable Integer id) {
+    public List<UserDTO> getAllJoinersOfAttendlist(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        return userService.getAllJoinersOfAttendlistByID(id);
+        return userService.getAllJoinersOfAttendlistByID(id)
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
     @PostMapping(value = "/{attendlistID}", consumes = MediaType.APPLICATION_JSON_VALUE)

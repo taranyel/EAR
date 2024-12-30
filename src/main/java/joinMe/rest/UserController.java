@@ -1,5 +1,7 @@
 package joinMe.rest;
 
+import joinMe.rest.dto.Mapper;
+import joinMe.rest.dto.UserDTO;
 import joinMe.db.entity.User;
 import joinMe.rest.util.RestUtils;
 import joinMe.security.model.UserDetails;
@@ -23,9 +25,12 @@ public class UserController {
 
     private final UserService userService;
 
+    private final Mapper mapper;
+
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, Mapper mapper) {
         this.userService = userService;
+        this.mapper = mapper;
     }
 
     /**
@@ -44,8 +49,8 @@ public class UserController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
-    public User getCurrent(Authentication auth) {
+    public UserDTO getCurrent(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        return ((UserDetails) auth.getPrincipal()).getUser();
+        return mapper.toDto(((UserDetails) auth.getPrincipal()).getUser());
     }
 }

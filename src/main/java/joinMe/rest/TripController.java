@@ -2,6 +2,8 @@ package joinMe.rest;
 
 import joinMe.db.entity.*;
 import joinMe.db.exception.NotFoundException;
+import joinMe.rest.dto.Mapper;
+import joinMe.rest.dto.TripDTO;
 import joinMe.rest.util.RestUtils;
 import joinMe.security.model.UserDetails;
 import joinMe.service.AttendlistService;
@@ -37,12 +39,15 @@ public class TripController {
 
     private final CommentService commentService;
 
+    private final Mapper mapper;
+
     @Autowired
-    public TripController(TripService tripService, UserService userService, AttendlistService attendlistService, CommentService commentService) {
+    public TripController(TripService tripService, UserService userService, AttendlistService attendlistService, CommentService commentService, Mapper mapper) {
         this.tripService = tripService;
         this.userService = userService;
         this.attendlistService = attendlistService;
         this.commentService = commentService;
+        this.mapper = mapper;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -62,12 +67,9 @@ public class TripController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
     @DeleteMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void deleteTrip(Authentication auth, @PathVariable int id) {
-        Trip trip = tripService.findByID(id);
-        if (trip == null) {
-            throw NotFoundException.create("Trip", id);
-        }
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        Trip trip = getTrip(id);
 
         if (user.getRole() != Role.ADMIN && !trip.getAuthor().getId().equals(user.getId())) {
             throw new AccessDeniedException("Cannot delete trip of another user.");
@@ -78,37 +80,48 @@ public class TripController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Trip> getAllActiveTrips(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
+    public List<TripDTO> getAllActiveTrips() {
         LOG.info("Retrieving all active trips.");
-        return tripService.findAllActiveTrips();
+        return tripService.findAllActiveTrips()
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Trip> getCurrentUserTrips(Authentication auth) {
+    public List<TripDTO> getCurrentUserTrips(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        return user.getTrips();
+        return user.getTrips()
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Trip getTrip(Authentication auth, @PathVariable int id) {
+    public TripDTO getTrip(Authentication auth, @PathVariable int id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        Trip trip = tripService.findByID(id);
-        if (trip == null) {
-            throw NotFoundException.create("Trip", id);
-        }
-        return trip;
+        Trip trip = getTrip(id);
+        return mapper.toDto(trip);
     }
 
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> addComment(Authentication auth, @PathVariable int tripID, @RequestBody Comment comment) {
         assert auth.getPrincipal() instanceof UserDetails;
-        Trip trip = getTrip(auth, tripID);
+        Trip trip = getTrip(tripID);
 
         tripService.addComment(trip, comment);
         commentService.persist(comment);
         LOG.debug("Added comment {}.", comment);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    private Trip getTrip(int id) {
+        Trip trip = tripService.findByID(id);
+        if (trip == null) {
+            throw NotFoundException.create("Trip", id);
+        }
+
+        return trip;
     }
 }

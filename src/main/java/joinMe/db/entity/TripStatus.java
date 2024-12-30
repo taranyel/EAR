@@ -1,5 +1,8 @@
 package joinMe.db.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum TripStatus {
     ACTIVE("ACTIVE"), CLOSED("CLOSED");
 

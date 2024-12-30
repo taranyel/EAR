@@ -3,6 +3,7 @@ package joinMe.db.entity;
 import jakarta.persistence.*;
 import joinMe.util.Constants;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
@@ -16,6 +17,12 @@ import lombok.Setter;
 public class JoinRequest extends AbstractEntity {
     public JoinRequest() {
         status = Constants.DEFAULT_REQUEST_STATUS;
+    }
+
+    public JoinRequest(User requester, Trip trip) {
+        this.requester = requester;
+        status = Constants.DEFAULT_REQUEST_STATUS;
+        this.trip = trip;
     }
 
     @ManyToOne

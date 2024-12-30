@@ -2,6 +2,7 @@ package joinMe.db.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -16,7 +17,10 @@ import java.util.Objects;
         @NamedQuery(name = "Attendlist.findByJoiner", query = "SELECT a FROM Attendlist a WHERE a.joiner = :joiner")
 })
 public class Attendlist extends AbstractEntity{
-    public Attendlist() {}
+
+    public Attendlist() {
+        messages = new ArrayList<>();
+    }
 
     public Attendlist(User joiner, Trip trip) {
         this.joiner = joiner;

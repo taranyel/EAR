@@ -3,6 +3,7 @@ package joinMe.db.entity;
 import jakarta.persistence.*;
 import joinMe.util.Constants;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -21,13 +22,31 @@ public class User extends AbstractEntity {
 
     public User() {
         trips = new ArrayList<>();
+        wishlists = new ArrayList<>();
+        complaints = new ArrayList<>();
+        attendlists = new ArrayList<>();
+        joinRequests = new ArrayList<>();
+        rating = 0;
+        role = Constants.DEFAULT_ROLE;
+        status = Constants.DEFAULT_ACCOUNT_STATUS;
+    }
+
+    public User(Address address, Date birthdate, String email, String firstName, String imagePath, String lastName, String password, String username) {
+        this.address = address;
+        this.birthdate = birthdate;
+        this.email = email;
+        this.firstName = firstName;
+        this.imagePath = imagePath;
+        this.lastName = lastName;
+        this.password = password;
+        this.username = username;
+        trips = new ArrayList<>();
         role = Constants.DEFAULT_ROLE;
         status = Constants.DEFAULT_ACCOUNT_STATUS;
         wishlists = new ArrayList<>();
         complaints = new ArrayList<>();
         attendlists = new ArrayList<>();
         joinRequests = new ArrayList<>();
-        imagePath = null;
         rating = 0;
     }
 

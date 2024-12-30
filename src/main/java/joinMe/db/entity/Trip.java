@@ -3,6 +3,7 @@ package joinMe.db.entity;
 import jakarta.persistence.*;
 import joinMe.util.Constants;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -26,6 +27,21 @@ import java.util.Objects;
 public class Trip extends AbstractEntity {
 
     public Trip() {
+        comments = new ArrayList<>();
+        attendlists = new ArrayList<>();
+        status = Constants.DEFAULT_TRIP_STATUS;
+        created = LocalDateTime.now();
+    }
+
+    public Trip(String title, User author, Integer capacity, String country, String description, Date endDate, String imagePath, Date startDate) {
+        this.title = title;
+        this.author = author;
+        this.capacity = capacity;
+        this.country = country;
+        this.description = description;
+        this.endDate = endDate;
+        this.imagePath = imagePath;
+        this.startDate = startDate;
         created = LocalDateTime.now();
         comments = new ArrayList<>();
         attendlists = new ArrayList<>();
@@ -88,5 +104,23 @@ public class Trip extends AbstractEntity {
     public void removeComment(Comment comment) {
         Objects.requireNonNull(comment);
         comments.remove(comment);
+    }
+
+    @Override
+    public String toString() {
+        return "Trip{" +
+                "attendlists=" + attendlists +
+                ", status=" + status +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", imagePath='" + imagePath + '\'' +
+                ", country='" + country + '\'' +
+                ", capacity=" + capacity +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", created=" + created +
+                ", author=" + author +
+                ", comments=" + comments +
+                '}';
     }
 }
