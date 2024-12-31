@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDate;
 import java.util.Calendar;
-import java.util.Date;
 
 @Component
 public class SystemInitializer {
@@ -43,7 +43,7 @@ public class SystemInitializer {
     @PostConstruct
     private void initSystem() {
         TransactionTemplate txTemplate = new TransactionTemplate(txManager);
-        txTemplate.execute((status) -> {
+        txTemplate.execute(status -> {
             generateAdmin();
             return null;
         });
@@ -61,14 +61,14 @@ public class SystemInitializer {
         admin.setUsername(ADMIN_USERNAME);
         admin.setFirstName("System");
         admin.setLastName("Administrator");
-        admin.setPassword("admin");
+        admin.setPassword(ADMIN_USERNAME);
         admin.setRole(Role.ADMIN);
 
         Address address = getAddress();
         address.addResident(admin);
         admin.setAddress(address);
 
-        admin.setBirthdate(new Date(2004, Calendar.MARCH, 4));
+        admin.setBirthdate(LocalDate.of(2004, Calendar.MARCH, 4));
         LOG.info("Generated admin user with credentials " + admin.getUsername() + "/" + admin.getPassword());
         userService.persist(admin);
     }
@@ -80,7 +80,6 @@ public class SystemInitializer {
         address.setCountry("Country");
         address.setNumber("1");
         address.setPostIndex("12345");
-        //addressService.persist(address);
         return address;
     }
 }

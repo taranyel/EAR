@@ -17,6 +17,7 @@ import java.util.Objects;
 @Table(name = "EAR_USER")
 @NamedQueries({
         @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username"),
+        @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email = :email"),
         @NamedQuery(name = "User.getAllJoinersOfAttendlistByTrip", query = "SELECT a.joiner FROM Attendlist a WHERE a.trip = :trip"),
         @NamedQuery(name = "User.getAllJoinersOfAttendlistById", query = "SELECT a.joiner FROM Attendlist a WHERE a.id = :id")
 })
@@ -88,7 +89,7 @@ public class User extends AbstractEntity {
     @Column(name = "image_path")
     private String imagePath;
 
-    @ManyToOne(optional = false, cascade = CascadeType.PERSIST)
+    @ManyToOne(optional = false, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(nullable = false)
     private Address address;
 
@@ -98,7 +99,7 @@ public class User extends AbstractEntity {
     @OneToMany(mappedBy = "joiner")
     private List<Attendlist> attendlists;
 
-    @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("created")
     private List<Trip> trips;
 

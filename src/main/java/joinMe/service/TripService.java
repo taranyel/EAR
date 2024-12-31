@@ -6,6 +6,7 @@ import joinMe.db.dao.TripDao;
 import joinMe.db.dao.UserDao;
 import joinMe.db.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -32,6 +33,19 @@ public class TripService {
     public void persist(Trip trip) {
         Objects.requireNonNull(trip);
         tripDao.persist(trip);
+    }
+
+    @Transactional
+    public boolean update(Long id, Trip trip) {
+        if (tripDao.exists(Math.toIntExact(id))) {
+            Trip tripOrigin = tripDao.find(Math.toIntExact(id));
+            trip.setAuthor(tripOrigin.getAuthor());
+            trip.setAttendlists(tripOrigin.getAttendlists());
+            trip.setComments(tripOrigin.getComments());
+            tripDao.update(trip);
+            return true;
+        }
+        return false;
     }
 
     @Transactional

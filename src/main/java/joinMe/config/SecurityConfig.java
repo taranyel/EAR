@@ -42,8 +42,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         final AuthenticationSuccess authSuccess = authenticationSuccess();
+
         // Allow through everything, it will be dealt with using security annotations on methods
-        http.authorizeHttpRequests((auth) -> auth.anyRequest().permitAll())
+        http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .authenticationProvider(authenticationProvider)
                 // Return 401 by default when attempting to access a secured endpoint
                 .exceptionHandling(ehc -> ehc.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
@@ -53,9 +54,13 @@ public class SecurityConfig {
                 .cors(conf -> conf.configurationSource(corsConfigurationSource()))
                 .headers(customizer -> customizer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 // Use custom success and failure handlers (return JSON for React frontend)
-                .formLogin(fl -> fl.successHandler(authSuccess)
+                .formLogin(fl -> fl
+                        .loginProcessingUrl("/login")
+                        .successHandler(authSuccess)
                         .failureHandler(authenticationFailureHandler()))
-                .logout(lgt -> lgt.logoutSuccessHandler(authSuccess));
+                .logout(lgt -> lgt
+                        .logoutUrl("/logout")
+                        .logoutSuccessHandler(authSuccess));
         return http.build();
     }
 

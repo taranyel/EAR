@@ -58,13 +58,25 @@ public class TripController {
         Trip trip = mapper.toEntity(tripDTO);
 
         userService.addTrip(user, trip);
-        tripService.persist(trip);
         Attendlist attendlist = attendlistService.create(user, trip);
 
         LOG.debug("Created trip {}.", tripDTO);
         LOG.debug("Created attend list {}.", attendlist);
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", trip.getId());
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Trip> updateTrip(Authentication authentication, @PathVariable Long id, @RequestBody Trip trip) {
+        final HttpHeaders headers = new HttpHeaders();
+//        Trip trip = mapper.toEntity(tripDTO);
+
+        if (tripService.update(id, trip)) {
+            headers.add("INFO-MESSAGE", "Trip was updated successfully.");
+            return new ResponseEntity<>(headers, HttpStatus.OK);
+        }
+        headers.add("ERROR-MESSAGE", "Trip was not found.");
+        return new ResponseEntity<>(headers, HttpStatus.NOT_FOUND);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")

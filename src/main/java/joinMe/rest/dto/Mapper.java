@@ -39,7 +39,7 @@ public class Mapper {
                 .status(user.getStatus().getStatus())
                 .rating(user.getRating().toString())
                 .firstName(user.getFirstName())
-                .birthDate(user.getBirthdate().toString())
+                .birthdate(user.getBirthdate().toString())
                 .lastName(user.getLastName())
                 .username(user.getUsername())
                 .imagePath(user.getImagePath())
@@ -114,7 +114,7 @@ public class Mapper {
     }
 
     public User toEntity(UserDTO userDTO) {
-        LocalDate date = LocalDate.parse(userDTO.getBirthDate());
+        LocalDate date = LocalDate.parse(userDTO.getBirthdate());
 
         return new User(toEntity(userDTO.getAddress()), date, userDTO.getEmail(), userDTO.getFirstName(),
                 userDTO.getImagePath(), userDTO.getLastName(), userDTO.getPassword(), userDTO.getUsername());
@@ -124,7 +124,7 @@ public class Mapper {
         LocalDate endDate = LocalDate.parse(tripDTO.getEndDate());
         LocalDate startDate = LocalDate.parse(tripDTO.getStartDate());
 
-        return new Trip(tripDTO.getTitle(), toEntity(tripDTO.getAuthor()), Integer.valueOf(tripDTO.getCapacity()),
+        return new Trip(tripDTO.getTitle(), null, Integer.valueOf(tripDTO.getCapacity()),
                 tripDTO.getCountry(), tripDTO.getDescription(), endDate, tripDTO.getImagePath(),
                 startDate);
     }

@@ -106,6 +106,11 @@ public class Trip extends AbstractEntity {
         comments.remove(comment);
     }
 
+    public void addAttendlist(Attendlist attendlist) {
+        Objects.requireNonNull(attendlist);
+        attendlists.add(attendlist);
+    }
+
     @Override
     public String toString() {
         return "Trip{" +

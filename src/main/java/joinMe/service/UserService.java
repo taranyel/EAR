@@ -3,6 +3,7 @@ package joinMe.service;
 import joinMe.db.dao.*;
 import joinMe.db.entity.*;
 import joinMe.db.exception.JoinRequestException;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ public class UserService {
 
     private final UserDao userDao;
 
+    private final TripDao tripdao;
+
     private final JoinRequestDao joinRequestDao;
 
     private final AttendlistDao attendlistDao;
@@ -28,9 +31,10 @@ public class UserService {
 
 
     @Autowired
-    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao,
+    public UserService(UserDao userDao, TripDao tripDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao,
                        ComplaintDao complaintDao, WishlistDao wishlistDao, PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
+        this.tripdao = tripDao;
         this.joinRequestDao = joinRequestDao;
         this.attendlistDao = attendlistDao;
         this.complaintDao = complaintDao;
@@ -40,9 +44,39 @@ public class UserService {
 
     @Transactional
     public void persist(User user) {
+        if (userDao.findByUsername(user.getUsername()) != null && userDao.findByEmail(user.getEmail()) != null) {
+            throw new IllegalArgumentException("User with this username and email already exists");
+        }
+        if (userDao.findByEmail(user.getEmail()) != null) {
+            throw new IllegalArgumentException("User with this email already exists");
+        }
+        if (userDao.findByUsername(user.getUsername()) != null) {
+            throw new IllegalArgumentException("User with this username already exists");
+        }
         Objects.requireNonNull(user);
         user.encodePassword(passwordEncoder);
         userDao.persist(user);
+    }
+
+    @Transactional
+    public void update(Long id, String newFirstName, String newLastName, String newPassword) {
+        User user = userDao.find(Math.toIntExact(id));
+        if (newPassword.isEmpty() || newFirstName.isEmpty() || newLastName.isEmpty()) {
+            throw new IllegalArgumentException("Credentials can't be empty.");
+        }
+        user.setFirstName(newFirstName);
+        user.setLastName(newLastName);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userDao.update(user);
+    }
+
+    @Transactional
+    public boolean delete(Long id) {
+        if (!userDao.exists(Math.toIntExact(id))) {
+            return false;
+        }
+        userDao.remove(userDao.find(Math.toIntExact(id)));
+        return true;
     }
 
     /// When trip is created, attendlist (chat) is created automatically and trip creator is added to the chat as admin
@@ -50,8 +84,12 @@ public class UserService {
     public void addTrip(User user, Trip trip) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
+        user.setPassword(userDao.find(user.getId()).getPassword());
+        user.setAttendlists(userDao.find(user.getId()).getAttendlists());
         trip.setAuthor(user);
         user.addTrip(trip);
+//        user.getTrips().add(trip);
+        tripdao.persist(trip);
         userDao.update(user);
     }
 
@@ -148,8 +186,18 @@ public class UserService {
     }
 
     @Transactional
+    public Long getId(String username) {
+        return Long.valueOf(userDao.findByUsername(username).getId());
+    }
+
+    @Transactional
     public boolean exists(String email) {
         return userDao.findByUsername(email) != null;
+    }
+
+    @Transactional
+    public boolean existsById(Long id) {
+        return userDao.find(Math.toIntExact(id)) != null;
     }
 
     @Transactional
