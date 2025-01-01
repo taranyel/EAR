@@ -18,28 +18,30 @@ public class Mapper {
                 .toList();
 
         return TripDTO.builder()
-                .created(trip.getCreated().toString())
+                .id(trip.getId())
+                .created(trip.getCreated())
                 .description(trip.getDescription())
                 .title(trip.getTitle())
-                .endDate(trip.getEndDate().toString())
+                .endDate(trip.getEndDate())
                 .imagePath(trip.getImagePath())
                 .country(trip.getCountry())
-                .status(trip.getStatus().getStatus())
-                .capacity(trip.getCapacity().toString())
+                .status(trip.getStatus())
+                .capacity(trip.getCapacity())
                 .comments(comments)
-                .startDate(trip.getStartDate().toString())
+                .startDate(trip.getStartDate())
                 .author(toDto(trip.getAuthor()))
                 .build();
     }
 
     public UserDTO toDto(User user) {
         return UserDTO.builder()
+                .id(user.getId())
                 .email(user.getEmail())
-                .role(user.getRole().getName())
-                .status(user.getStatus().getStatus())
-                .rating(user.getRating().toString())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .rating(user.getRating())
                 .firstName(user.getFirstName())
-                .birthdate(user.getBirthdate().toString())
+                .birthDate(user.getBirthdate())
                 .lastName(user.getLastName())
                 .username(user.getUsername())
                 .imagePath(user.getImagePath())
@@ -56,6 +58,7 @@ public class Mapper {
         }
 
         return AddressDTO.builder()
+                .id(address.getId())
                 .type(type)
                 .city(address.getCity())
                 .number(address.getNumber())
@@ -67,6 +70,7 @@ public class Mapper {
 
     public AttendlistDTO toDto(Attendlist attendlist) {
         return AttendlistDTO.builder()
+                .id(attendlist.getId())
                 .joiner(toDto(attendlist.getJoiner()))
                 .trip(toDto(attendlist.getTrip()))
                 .build();
@@ -74,6 +78,7 @@ public class Mapper {
 
     public CommentDTO toDto(Comment comment) {
         return CommentDTO.builder()
+                .id(comment.getId())
                 .author(toDto(comment.getAuthor()))
                 .text(comment.getText())
                 .trip(toDto(comment.getTrip()))
@@ -82,6 +87,7 @@ public class Mapper {
 
     public ComplaintDTO toDto(Complaint complaint) {
         return ComplaintDTO.builder()
+                .id(complaint.getId())
                 .accused(toDto(complaint.getAccused()))
                 .description(complaint.getDescription())
                 .build();
@@ -89,7 +95,8 @@ public class Mapper {
 
     public JoinRequestDTO toDto(JoinRequest joinRequest) {
         return JoinRequestDTO.builder()
-                .status(joinRequest.getStatus().getStatus())
+                .id(joinRequest.getId())
+                .status(joinRequest.getStatus())
                 .requester(toDto(joinRequest.getRequester()))
                 .trip(toDto(joinRequest.getTrip()))
                 .build();
@@ -97,6 +104,7 @@ public class Mapper {
 
     public MessageDTO toDto(Message message) {
         return MessageDTO.builder()
+                .id(message.getId())
                 .attendlist(toDto(message.getAttendlist()))
                 .author(toDto(message.getAuthor()))
                 .text(message.getText())
@@ -104,48 +112,164 @@ public class Mapper {
     }
 
     public Address toEntity(AddressDTO addressDTO) {
+        List<User> residents = addressDTO.getResidents()
+                .stream()
+                .map(this::toEntity)
+                .toList();
+
         if (Objects.equals(addressDTO.getType(), "flat")) {
-            return new Flat(addressDTO.getCity(), addressDTO.getCountry(), addressDTO.getNumber(),
-                    addressDTO.getPostIndex(), addressDTO.getStreet());
+            return Flat.builder()
+                    .id(addressDTO.getId())
+                    .number(addressDTO.getNumber())
+                    .country(addressDTO.getCountry())
+                    .postIndex(addressDTO.getPostIndex())
+                    .city(addressDTO.getCity())
+                    .street(addressDTO.getStreet())
+                    .residents(residents)
+                    .build();
         } else {
-            return new House(addressDTO.getCity(), addressDTO.getCountry(), addressDTO.getNumber(),
-                    addressDTO.getPostIndex(), addressDTO.getStreet());
+            return House.builder()
+                    .id(addressDTO.getId())
+                    .number(addressDTO.getNumber())
+                    .country(addressDTO.getCountry())
+                    .postIndex(addressDTO.getPostIndex())
+                    .city(addressDTO.getCity())
+                    .street(addressDTO.getStreet())
+                    .residents(residents)
+                    .build();
         }
     }
 
     public User toEntity(UserDTO userDTO) {
-        LocalDate date = LocalDate.parse(userDTO.getBirthdate());
+        List<Attendlist> attendlists = userDTO.getAttendlists()
+                .stream()
+                .map(this::toEntity)
+                .toList();
 
-        return new User(toEntity(userDTO.getAddress()), date, userDTO.getEmail(), userDTO.getFirstName(),
-                userDTO.getImagePath(), userDTO.getLastName(), userDTO.getPassword(), userDTO.getUsername());
+        List<Complaint> complaints = userDTO.getComplaints()
+                .stream()
+                .map(this::toEntity)
+                .toList();
+
+        List<Trip> trips = userDTO.getTrips()
+                .stream()
+                .map(this::toEntity)
+                .toList();
+
+        List<Wishlist> wishlists = userDTO.getWishlists()
+                .stream()
+                .map(this::toEntity)
+                .toList();
+
+        List<JoinRequest> joinRequests = userDTO.getJoinRequests()
+                .stream()
+                .map(this::toEntity)
+                .toList();
+
+        return User.builder()
+                .id(userDTO.getId())
+                .address(toEntity(userDTO.getAddress()))
+                .status(userDTO.getStatus())
+                .rating(userDTO.getRating())
+                .attendlists(attendlists)
+                .complaints(complaints)
+                .birthdate(userDTO.getBirthDate())
+                .firstName(userDTO.getFirstName())
+                .email(userDTO.getEmail())
+                .imagePath(userDTO.getImagePath())
+                .lastName(userDTO.getLastName())
+                .rating(userDTO.getRating())
+                .role(userDTO.getRole())
+                .trips(trips)
+                .username(userDTO.getUsername())
+                .password(userDTO.getPassword())
+                .wishlists(wishlists)
+                .joinRequests(joinRequests)
+                .build();
     }
 
     public Trip toEntity(TripDTO tripDTO) {
-        LocalDate endDate = LocalDate.parse(tripDTO.getEndDate());
-        LocalDate startDate = LocalDate.parse(tripDTO.getStartDate());
+        List<Comment> comments = tripDTO.getComments()
+                .stream()
+                .map(this::toEntity)
+                .toList();
 
-        return new Trip(tripDTO.getTitle(), null, Integer.valueOf(tripDTO.getCapacity()),
-                tripDTO.getCountry(), tripDTO.getDescription(), endDate, tripDTO.getImagePath(),
-                startDate);
+        List<Attendlist> attendlists = tripDTO.getAttendlists()
+                .stream()
+                .map(this::toEntity)
+                .toList();
+
+        return Trip.builder()
+                .id(tripDTO.getId())
+                .status(tripDTO.getStatus())
+                .attendlists(attendlists)
+                .comments(comments)
+                .startDate(tripDTO.getStartDate())
+                .endDate(tripDTO.getEndDate())
+                .author(toEntity(tripDTO.getAuthor()))
+                .capacity(tripDTO.getCapacity())
+                .created(tripDTO.getCreated())
+                .description(tripDTO.getDescription())
+                .imagePath(tripDTO.getImagePath())
+                .title(tripDTO.getTitle())
+                .country(tripDTO.getCountry())
+                .build();
+    }
+
+    public JoinRequest toEntity(JoinRequestDTO joinRequestDTO) {
+        return JoinRequest.builder()
+                .id(joinRequestDTO.getId())
+                .status(joinRequestDTO.getStatus())
+                .trip(toEntity(joinRequestDTO.getTrip()))
+                .requester(toEntity(joinRequestDTO.getRequester()))
+                .build();
     }
 
     public Attendlist toEntity(AttendlistDTO attendlistDTO) {
-        return new Attendlist(toEntity(attendlistDTO.getJoiner()), toEntity(attendlistDTO.getTrip()));
+        List<Message> messages = attendlistDTO.getMessages()
+                .stream()
+                .map(this::toEntity)
+                .toList();
+
+        return Attendlist.builder()
+                .id(attendlistDTO.getId())
+                .trip(toEntity(attendlistDTO.getTrip()))
+                .messages(messages)
+                .joiner(toEntity(attendlistDTO.getJoiner()))
+                .build();
     }
 
     public Message toEntity(MessageDTO messageDTO) {
-        return new Message(toEntity(messageDTO.getAttendlist()), toEntity(messageDTO.getAuthor()), messageDTO.getText());
+        return Message.builder()
+                .id(messageDTO.getId())
+                .text(messageDTO.getText())
+                .author(toEntity(messageDTO.getAuthor()))
+                .attendlist(toEntity(messageDTO.getAttendlist()))
+                .build();
     }
 
     public Comment toEntity(CommentDTO commentDTO) {
-        return new Comment(toEntity(commentDTO.getAuthor()), commentDTO.getText(), toEntity(commentDTO.getTrip()));
+        return Comment.builder()
+                .id(commentDTO.getId())
+                .text(commentDTO.getText())
+                .trip(toEntity(commentDTO.getTrip()))
+                .author(toEntity(commentDTO.getAuthor()))
+                .build();
     }
 
     public Complaint toEntity(ComplaintDTO complaintDTO) {
-        return new Complaint(toEntity(complaintDTO.getAccused()), complaintDTO.getDescription());
+        return Complaint.builder()
+                .id(complaintDTO.getId())
+                .accused(toEntity(complaintDTO.getAccused()))
+                .description(complaintDTO.getDescription())
+                .build();
     }
 
     public Wishlist toEntity(WishlistDTO wishlistDTO) {
-        return new Wishlist(toEntity(wishlistDTO.getOwner()), toEntity(wishlistDTO.getTrip()));
+        return Wishlist.builder()
+                .id(wishlistDTO.getId())
+                .owner(toEntity(wishlistDTO.getOwner()))
+                .trip(toEntity(wishlistDTO.getTrip()))
+                .build();
     }
 }

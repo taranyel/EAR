@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class CommentDTO {
+    private Integer id;
     private UserDTO author;
     private String text;
     private TripDTO trip;

@@ -1,8 +1,11 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,24 +14,10 @@ import java.util.Objects;
 @Setter
 @Getter
 @Entity
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public abstract class Address extends AbstractEntity {
-
-    public Address() {
-        init();
-    }
-
-    public Address(String city, String country, String number, String postIndex, String street) {
-        this.city = city;
-        this.country = country;
-        this.number = number;
-        this.postIndex = postIndex;
-        this.street = street;
-        init();
-    }
-
-    private void init() {
-        this.residents = new ArrayList<>();
-    }
 
     @Basic(optional = false)
     @Column(name = "city", nullable = false)

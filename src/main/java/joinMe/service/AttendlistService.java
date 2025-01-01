@@ -41,9 +41,10 @@ public class AttendlistService {
 
     @Transactional
     public Attendlist create(User admin, Trip trip) {
-        Attendlist attendlist = new Attendlist(admin, trip);
-        admin.setAttendlists(userDao.find(admin.getId()).getAttendlists());
-        trip.setAttendlists(tripDao.find(trip.getId()).getAttendlists());
+        Attendlist attendlist = Attendlist.builder()
+                .joiner(admin)
+                .trip(trip)
+                .build();
         admin.addAttendlist(attendlist);
         trip.addAttendlist(attendlist);
         dao.persist(attendlist);

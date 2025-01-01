@@ -1,23 +1,19 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Setter
 @Getter
 @Entity
+@SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
 @NamedQueries({
         @NamedQuery(name = "Wishlist.findTripsByOwner", query = "SELECT w.trip FROM Wishlist w WHERE w.owner = :owner")
 })
 public class Wishlist extends AbstractEntity {
-
-    public Wishlist(User owner, Trip trip) {
-        this.owner = owner;
-        this.trip = trip;
-    }
 
     @ManyToOne
     @JoinColumn(nullable = false)

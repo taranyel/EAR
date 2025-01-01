@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class ComplaintDTO {
+    private Integer id;
     private UserDTO accused;
     private String description;
 }

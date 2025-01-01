@@ -52,7 +52,7 @@ public class WishlistController {
 
         userService.addWishlist(user, wishlist);
         wishlistService.persist(wishlist);
-        LOG.debug("Created wishlist {}.", wishlistDTO);
+        LOG.debug("Created wishlist {}.", wishlist);
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", wishlist.getId());
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }

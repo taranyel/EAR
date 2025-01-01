@@ -1,25 +1,23 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Setter
 @Getter
 @Entity
+@SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
 @NamedQueries({
         @NamedQuery(name = "Message.findByAuthor", query = "SELECT m FROM Message m WHERE m.author = :author"),
         @NamedQuery(name = "Message.findByAttendList", query = "SELECT m FROM Message m WHERE m.attendlist = :attendlist")
 })
 public class Message extends AbstractEntity {
-
-    public Message(Attendlist attendlist, User author, String text) {
-        this.attendlist = attendlist;
-        this.author = author;
-        this.text = text;
-    }
 
     @Basic(optional = false)
     @Column(name = "text", nullable = false)

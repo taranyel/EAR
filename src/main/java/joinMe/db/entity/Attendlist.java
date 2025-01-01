@@ -1,8 +1,11 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,25 +14,14 @@ import java.util.Objects;
 @Setter
 @Getter
 @Entity
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @NamedQueries({
         @NamedQuery(name = "Attendlist.findByTripAndJoiner", query = "SELECT a FROM Attendlist a WHERE a.trip = :trip AND a.joiner = :joiner"),
         @NamedQuery(name = "Attendlist.findByJoiner", query = "SELECT a FROM Attendlist a WHERE a.joiner = :joiner")
 })
 public class Attendlist extends AbstractEntity{
-
-    public Attendlist() {
-        init();
-    }
-
-    public Attendlist(User joiner, Trip trip) {
-        this.joiner = joiner;
-        this.trip = trip;
-        init();
-    }
-
-    private void init() {
-        messages = new ArrayList<>();
-    }
 
     @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinColumn(name = "attendlist_id")

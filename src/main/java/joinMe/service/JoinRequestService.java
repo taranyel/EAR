@@ -7,10 +7,10 @@ import joinMe.db.entity.RequestStatus;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
 import joinMe.db.exception.JoinRequestException;
+import joinMe.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -67,9 +67,12 @@ public class JoinRequestService {
             throw new JoinRequestException("User cannot create more than one join request to one trip.");
         }
 
-        JoinRequest joinRequest = new JoinRequest();
-        joinRequest.setRequester(requester);
-        joinRequest.setTrip(trip);
+        JoinRequest joinRequest = JoinRequest.builder()
+                .status(Constants.DEFAULT_REQUEST_STATUS)
+                .requester(requester)
+                .trip(trip)
+                .build();
+
         dao.persist(joinRequest);
         return joinRequest;
     }

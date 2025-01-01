@@ -30,6 +30,12 @@ public class TripService {
     }
 
     @Transactional
+    public void update(Trip trip) {
+        Objects.requireNonNull(trip);
+        tripDao.update(trip);
+    }
+
+    @Transactional
     public void persist(Trip trip) {
         Objects.requireNonNull(trip);
         tripDao.persist(trip);
@@ -117,12 +123,6 @@ public class TripService {
     @Transactional
     public Trip findByID(Integer id) {
         return tripDao.find(id);
-    }
-
-    @Transactional
-    public List<Trip> findInWishlistByOwner(User owner) {
-        Objects.requireNonNull(owner);
-        return tripDao.findInWishlistByOwner(owner);
     }
 
     public User getAuthor(Trip trip) {

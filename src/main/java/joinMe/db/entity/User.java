@@ -2,8 +2,8 @@ package joinMe.db.entity;
 
 import jakarta.persistence.*;
 import joinMe.util.Constants;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
@@ -14,6 +14,9 @@ import java.util.Objects;
 @Setter
 @Getter
 @Entity
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "EAR_USER")
 @NamedQueries({
         @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username"),
@@ -22,33 +25,6 @@ import java.util.Objects;
         @NamedQuery(name = "User.getAllJoinersOfAttendlistById", query = "SELECT a.joiner FROM Attendlist a WHERE a.id = :id")
 })
 public class User extends AbstractEntity {
-
-    public User() {
-        init();
-    }
-
-    public User(Address address, LocalDate birthdate, String email, String firstName, String imagePath, String lastName, String password, String username) {
-        this.address = address;
-        this.birthdate = birthdate;
-        this.email = email;
-        this.firstName = firstName;
-        this.imagePath = imagePath;
-        this.lastName = lastName;
-        this.password = password;
-        this.username = username;
-        init();
-    }
-
-    private void init() {
-        trips = new ArrayList<>();
-        role = Constants.DEFAULT_ROLE;
-        status = Constants.DEFAULT_ACCOUNT_STATUS;
-        wishlists = new ArrayList<>();
-        complaints = new ArrayList<>();
-        attendlists = new ArrayList<>();
-        joinRequests = new ArrayList<>();
-        rating = 0;
-    }
 
     @Basic(optional = false)
     @Column(name = "first_name", nullable = false)
@@ -84,7 +60,7 @@ public class User extends AbstractEntity {
 
     @Basic(optional = false)
     @Column(name = "rating", nullable = false)
-    private Integer rating;
+    private Integer rating = 0;
 
     @Column(name = "image_path")
     private String imagePath;

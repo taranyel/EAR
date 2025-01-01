@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class WishlistDTO {
+    private Integer id;
     private UserDTO owner;
     private TripDTO trip;
 }

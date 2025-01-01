@@ -5,6 +5,7 @@ import joinMe.db.entity.Address;
 import joinMe.db.entity.Flat;
 import joinMe.db.entity.Role;
 import joinMe.db.entity.User;
+import joinMe.util.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDate;
-import java.util.Calendar;
+import java.time.Month;
+import java.util.ArrayList;
 
 @Component
 public class SystemInitializer {
@@ -56,30 +58,45 @@ public class SystemInitializer {
         if (userService.exists(ADMIN_USERNAME)) {
             return;
         }
-        User admin = new User();
-        admin.setEmail(ADMIN_USERNAME);
-        admin.setUsername(ADMIN_USERNAME);
-        admin.setFirstName("System");
-        admin.setLastName("Administrator");
-        admin.setPassword(ADMIN_USERNAME);
-        admin.setRole(Role.ADMIN);
+        Address address = createAddress();
 
-        Address address = getAddress();
-        address.addResident(admin);
+        User admin = createUser();
         admin.setAddress(address);
 
-        admin.setBirthdate(LocalDate.of(2004, Calendar.MARCH, 4));
+        address.addResident(admin);
+
         LOG.info("Generated admin user with credentials " + admin.getUsername() + "/" + admin.getPassword());
         userService.persist(admin);
     }
 
-    private Address getAddress() {
-        Address address = new Flat();
-        address.setStreet("Street");
-        address.setCity("City");
-        address.setCountry("Country");
-        address.setNumber("1");
-        address.setPostIndex("12345");
-        return address;
+    private Address createAddress() {
+        return Flat.builder()
+                .street("Street")
+                .city("City")
+                .country("Country")
+                .number("1")
+                .postIndex("12345")
+                .residents(new ArrayList<>())
+                .build();
+    }
+
+    private User createUser() {
+        return User.builder()
+                .email(ADMIN_USERNAME)
+                .username(ADMIN_USERNAME)
+                .firstName("System")
+                .lastName("Administrator")
+                .password("admin")
+                .role(Role.ADMIN)
+                .trips(new ArrayList<>())
+                .joinRequests(new ArrayList<>())
+                .wishlists(new ArrayList<>())
+                .rating(0)
+                .status(Constants.DEFAULT_ACCOUNT_STATUS)
+                .imagePath("")
+                .complaints(new ArrayList<>())
+                .attendlists(new ArrayList<>())
+                .birthdate(LocalDate.of(2004, Month.APRIL, 5))
+                .build();
     }
 }

@@ -68,13 +68,4 @@ public class TripDao extends BaseDao<Trip> {
             return null;
         }
     }
-
-    public List<Trip> findInWishlistByOwner(User owner) {
-        try {
-            return em.createNamedQuery("Trip.findInWishlistByOwner", Trip.class).setParameter("owner", owner)
-                    .getResultList();
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
 }

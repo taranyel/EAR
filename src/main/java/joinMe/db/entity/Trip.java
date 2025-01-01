@@ -2,8 +2,11 @@ package joinMe.db.entity;
 
 import jakarta.persistence.*;
 import joinMe.util.Constants;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,6 +17,9 @@ import java.util.Objects;
 @Setter
 @Getter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @NamedQueries({
         @NamedQuery(name = "Trip.findByStatus", query = "SELECT t FROM Trip t WHERE t.status = :status"),
         @NamedQuery(name = "Trip.findByCountry", query = "SELECT t FROM Trip t WHERE t.country = :country"),
@@ -24,29 +30,6 @@ import java.util.Objects;
         @NamedQuery(name = "Trip.findInWishlistByOwner", query = "SELECT w.trip FROM Wishlist w WHERE w.owner = :owner")
 })
 public class Trip extends AbstractEntity {
-
-    public Trip() {
-        init();
-    }
-
-    public Trip(String title, User author, Integer capacity, String country, String description, LocalDate endDate, String imagePath, LocalDate startDate) {
-        this.title = title;
-        this.author = author;
-        this.capacity = capacity;
-        this.country = country;
-        this.description = description;
-        this.endDate = endDate;
-        this.imagePath = imagePath;
-        this.startDate = startDate;
-        init();
-    }
-
-    private void init() {
-        created = LocalDateTime.now();
-        comments = new ArrayList<>();
-        attendlists = new ArrayList<>();
-        status = Constants.DEFAULT_TRIP_STATUS;
-    }
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

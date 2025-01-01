@@ -2,6 +2,7 @@ package joinMe.rest;
 
 import joinMe.db.entity.*;
 import joinMe.db.exception.NotFoundException;
+import joinMe.db.exception.ValidationException;
 import joinMe.rest.dto.CommentDTO;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.TripDTO;
@@ -50,6 +51,20 @@ public class TripController {
         this.mapper = mapper;
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateTrip(@PathVariable Integer id, @RequestBody TripDTO tripDTO) {
+        final Trip trip = tripService.findByID(id);
+        if (!trip.getId().equals(tripDTO.getId())) {
+            throw new ValidationException("Trip identifier in the data does not match the one in the request URL.");
+        }
+
+        Trip newTrip = mapper.toEntity(tripDTO);
+        tripService.update(newTrip);
+        LOG.debug("Updated trip {}.", newTrip);
+    }
+
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> createTrip(Authentication auth, @RequestBody TripDTO tripDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
@@ -60,7 +75,7 @@ public class TripController {
         userService.addTrip(user, trip);
         Attendlist attendlist = attendlistService.create(user, trip);
 
-        LOG.debug("Created trip {}.", tripDTO);
+        LOG.debug("Created trip {}.", trip);
         LOG.debug("Created attend list {}.", attendlist);
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", trip.getId());
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
@@ -128,7 +143,7 @@ public class TripController {
 
         tripService.addComment(trip, comment);
         commentService.persist(comment);
-        LOG.debug("Added comment {}.", commentDTO);
+        LOG.debug("Added comment {}.", comment);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

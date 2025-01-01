@@ -1,5 +1,6 @@
 package joinMe.rest.dto;
 
+import joinMe.db.entity.RequestStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,7 +11,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class JoinRequestDTO {
+    private Integer id;
     private UserDTO requester;
-    private String status;
+    private RequestStatus status;
     private TripDTO trip;
 }
