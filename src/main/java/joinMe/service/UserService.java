@@ -45,10 +45,13 @@ public class UserService {
     }
 
     @Transactional
+    public void remove(User user) {
+        Objects.requireNonNull(user);
+        userDao.remove(user);
+    }
+
+    @Transactional
     public void persist(User user) {
-        if (userDao.findByUsername(user.getUsername()) != null && userDao.findByEmail(user.getEmail()) != null) {
-            throw new IllegalArgumentException("User with this username and email already exists");
-        }
         if (userDao.findByEmail(user.getEmail()) != null) {
             throw new IllegalArgumentException("User with this email already exists");
         }
@@ -175,11 +178,6 @@ public class UserService {
     @Transactional
     public boolean exists(String email) {
         return userDao.findByUsername(email) != null;
-    }
-
-    @Transactional
-    public boolean existsById(Long id) {
-        return userDao.find(Math.toIntExact(id)) != null;
     }
 
     @Transactional

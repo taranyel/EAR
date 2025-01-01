@@ -3,7 +3,6 @@ package joinMe.service;
 import jakarta.transaction.Transactional;
 import joinMe.db.dao.AttendlistDao;
 import joinMe.db.dao.TripDao;
-import joinMe.db.dao.UserDao;
 import joinMe.db.entity.Attendlist;
 import joinMe.db.entity.Message;
 import joinMe.db.entity.Trip;
@@ -19,14 +18,10 @@ public class AttendlistService {
     private final AttendlistDao dao;
 
     private final TripDao tripDao;
-
-    private final UserDao userDao;
-
     @Autowired
-    public AttendlistService(AttendlistDao dao, TripDao tripDao, UserDao userDao) {
+    public AttendlistService(AttendlistDao dao, TripDao tripDao) {
         this.dao = dao;
         this.tripDao = tripDao;
-        this.userDao = userDao;
     }
 
     public User getAdmin(Attendlist attendlist) {
@@ -45,10 +40,8 @@ public class AttendlistService {
                 .joiner(admin)
                 .trip(trip)
                 .build();
-        admin.addAttendlist(attendlist);
         trip.addAttendlist(attendlist);
         dao.persist(attendlist);
-        userDao.update(admin);
         tripDao.update(trip);
         return attendlist;
     }

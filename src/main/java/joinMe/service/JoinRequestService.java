@@ -7,7 +7,6 @@ import joinMe.db.entity.RequestStatus;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
 import joinMe.db.exception.JoinRequestException;
-import joinMe.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -68,7 +67,6 @@ public class JoinRequestService {
         }
 
         JoinRequest joinRequest = JoinRequest.builder()
-                .status(Constants.DEFAULT_REQUEST_STATUS)
                 .requester(requester)
                 .trip(trip)
                 .build();

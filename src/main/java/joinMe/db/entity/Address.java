@@ -1,10 +1,7 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
@@ -39,9 +36,10 @@ public abstract class Address extends AbstractEntity {
     @Column(name = "country", nullable = false)
     private String country;
 
-    @OneToMany
+    @OneToMany()
     @JoinColumn(name = "address_id")
-    private List<User> residents;
+    @Builder.Default
+    private List<User> residents = new ArrayList<>();
 
     public void addResident(User resident) {
         Objects.requireNonNull(resident);

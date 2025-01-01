@@ -48,11 +48,13 @@ public class User extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
-    private Role role;
+    @Builder.Default
+    private Role role = Constants.DEFAULT_ROLE;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private AccountStatus status;
+    @Builder.Default
+    private AccountStatus status = Constants.DEFAULT_ACCOUNT_STATUS;
 
     @Basic(optional = false)
     @Column(name = "birthdate", nullable = false)
@@ -60,30 +62,36 @@ public class User extends AbstractEntity {
 
     @Basic(optional = false)
     @Column(name = "rating", nullable = false)
+    @Builder.Default
     private Integer rating = 0;
 
     @Column(name = "image_path")
     private String imagePath;
 
-    @ManyToOne(optional = false, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne(optional = false, cascade = CascadeType.MERGE)
     @JoinColumn(nullable = false)
     private Address address;
 
     @OneToMany(mappedBy = "accused", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<Complaint> complaints;
+    @Builder.Default
+    private List<Complaint> complaints = new ArrayList<>();
 
     @OneToMany(mappedBy = "joiner")
-    private List<Attendlist> attendlists;
+    @Builder.Default
+    private List<Attendlist> attendlists = new ArrayList<>();
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("created")
-    private List<Trip> trips;
+    @Builder.Default
+    private List<Trip> trips = new ArrayList<>();
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<Wishlist> wishlists;
+    @Builder.Default
+    private List<Wishlist> wishlists = new ArrayList<>();
 
     @OneToMany(mappedBy = "requester", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<JoinRequest> joinRequests;
+    @Builder.Default
+    private List<JoinRequest> joinRequests = new ArrayList<>();
 
     public void encodePassword(PasswordEncoder encoder) {
         this.password = encoder.encode(password);

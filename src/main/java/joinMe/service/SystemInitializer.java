@@ -5,7 +5,6 @@ import joinMe.db.entity.Address;
 import joinMe.db.entity.Flat;
 import joinMe.db.entity.Role;
 import joinMe.db.entity.User;
-import joinMe.util.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.ArrayList;
 
 @Component
 public class SystemInitializer {
@@ -58,15 +56,15 @@ public class SystemInitializer {
         if (userService.exists(ADMIN_USERNAME)) {
             return;
         }
-        Address address = createAddress();
-
         User admin = createUser();
-        admin.setAddress(address);
+        Address address = createAddress();
+        addressService.persist(address);
 
-        address.addResident(admin);
+        admin.setAddress(address);
+        userService.persist(admin);
+        addressService.addResident(address, admin);
 
         LOG.info("Generated admin user with credentials " + admin.getUsername() + "/" + admin.getPassword());
-        userService.persist(admin);
     }
 
     private Address createAddress() {
@@ -76,7 +74,6 @@ public class SystemInitializer {
                 .country("Country")
                 .number("1")
                 .postIndex("12345")
-                .residents(new ArrayList<>())
                 .build();
     }
 
@@ -88,14 +85,7 @@ public class SystemInitializer {
                 .lastName("Administrator")
                 .password("admin")
                 .role(Role.ADMIN)
-                .trips(new ArrayList<>())
-                .joinRequests(new ArrayList<>())
-                .wishlists(new ArrayList<>())
-                .rating(0)
-                .status(Constants.DEFAULT_ACCOUNT_STATUS)
-                .imagePath("")
-                .complaints(new ArrayList<>())
-                .attendlists(new ArrayList<>())
+                .imagePath("path")
                 .birthdate(LocalDate.of(2004, Month.APRIL, 5))
                 .build();
     }

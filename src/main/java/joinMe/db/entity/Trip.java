@@ -2,10 +2,7 @@ package joinMe.db.entity;
 
 import jakarta.persistence.*;
 import joinMe.util.Constants;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
@@ -33,7 +30,8 @@ public class Trip extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private TripStatus status;
+    @Builder.Default
+    private TripStatus status = Constants.DEFAULT_TRIP_STATUS;
 
     @Basic(optional = false)
     @Column(name = "title", nullable = false)
@@ -65,7 +63,8 @@ public class Trip extends AbstractEntity {
 
     @Basic(optional = false)
     @Column(name = "created", nullable = false)
-    private LocalDateTime created;
+    @Builder.Default
+    private LocalDateTime created = LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -73,11 +72,13 @@ public class Trip extends AbstractEntity {
 
     @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinColumn(name = "trip_id")
-    private List<Comment> comments;
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinColumn(name = "trip_id")
-    private List<Attendlist> attendlists;
+    @Builder.Default
+    private List<Attendlist> attendlists = new ArrayList<>();
 
     public void addComment(Comment comment) {
         Objects.requireNonNull(comment);

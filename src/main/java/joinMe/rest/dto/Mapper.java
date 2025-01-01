@@ -3,7 +3,6 @@ package joinMe.rest.dto;
 import joinMe.db.entity.*;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -112,11 +111,6 @@ public class Mapper {
     }
 
     public Address toEntity(AddressDTO addressDTO) {
-        List<User> residents = addressDTO.getResidents()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
         if (Objects.equals(addressDTO.getType(), "flat")) {
             return Flat.builder()
                     .id(addressDTO.getId())
@@ -125,7 +119,6 @@ public class Mapper {
                     .postIndex(addressDTO.getPostIndex())
                     .city(addressDTO.getCity())
                     .street(addressDTO.getStreet())
-                    .residents(residents)
                     .build();
         } else {
             return House.builder()
@@ -135,44 +128,16 @@ public class Mapper {
                     .postIndex(addressDTO.getPostIndex())
                     .city(addressDTO.getCity())
                     .street(addressDTO.getStreet())
-                    .residents(residents)
                     .build();
         }
     }
 
     public User toEntity(UserDTO userDTO) {
-        List<Attendlist> attendlists = userDTO.getAttendlists()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
-        List<Complaint> complaints = userDTO.getComplaints()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
-        List<Trip> trips = userDTO.getTrips()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
-        List<Wishlist> wishlists = userDTO.getWishlists()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
-        List<JoinRequest> joinRequests = userDTO.getJoinRequests()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
         return User.builder()
                 .id(userDTO.getId())
                 .address(toEntity(userDTO.getAddress()))
                 .status(userDTO.getStatus())
                 .rating(userDTO.getRating())
-                .attendlists(attendlists)
-                .complaints(complaints)
                 .birthdate(userDTO.getBirthDate())
                 .firstName(userDTO.getFirstName())
                 .email(userDTO.getEmail())
@@ -180,11 +145,8 @@ public class Mapper {
                 .lastName(userDTO.getLastName())
                 .rating(userDTO.getRating())
                 .role(userDTO.getRole())
-                .trips(trips)
                 .username(userDTO.getUsername())
                 .password(userDTO.getPassword())
-                .wishlists(wishlists)
-                .joinRequests(joinRequests)
                 .build();
     }
 
@@ -213,15 +175,6 @@ public class Mapper {
                 .imagePath(tripDTO.getImagePath())
                 .title(tripDTO.getTitle())
                 .country(tripDTO.getCountry())
-                .build();
-    }
-
-    public JoinRequest toEntity(JoinRequestDTO joinRequestDTO) {
-        return JoinRequest.builder()
-                .id(joinRequestDTO.getId())
-                .status(joinRequestDTO.getStatus())
-                .trip(toEntity(joinRequestDTO.getTrip()))
-                .requester(toEntity(joinRequestDTO.getRequester()))
                 .build();
     }
 

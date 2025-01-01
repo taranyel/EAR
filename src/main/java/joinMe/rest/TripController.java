@@ -72,8 +72,13 @@ public class TripController {
 
         Trip trip = mapper.toEntity(tripDTO);
 
+        if (trip.getAuthor() != user) {
+            throw new AccessDeniedException("Cannot add trip of another user.");
+        }
+
         userService.addTrip(user, trip);
         Attendlist attendlist = attendlistService.create(user, trip);
+        userService.addAttendlist(user, attendlist);
 
         LOG.debug("Created trip {}.", trip);
         LOG.debug("Created attend list {}.", attendlist);
@@ -81,31 +86,24 @@ public class TripController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Trip> updateTrip(Authentication authentication, @PathVariable Long id, @RequestBody Trip trip) {
-        final HttpHeaders headers = new HttpHeaders();
-//        Trip trip = mapper.toEntity(tripDTO);
-
-        if (tripService.update(id, trip)) {
-            headers.add("INFO-MESSAGE", "Trip was updated successfully.");
-            return new ResponseEntity<>(headers, HttpStatus.OK);
-        }
-        headers.add("ERROR-MESSAGE", "Trip was not found.");
-        return new ResponseEntity<>(headers, HttpStatus.NOT_FOUND);
-    }
-
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
     @DeleteMapping(value = "/{id}")
     public void deleteTrip(Authentication auth, @PathVariable int id) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        Trip trip = getTrip(id);
 
-        if (user.getRole() != Role.ADMIN && !trip.getAuthor().getId().equals(user.getId())) {
-            throw new AccessDeniedException("Cannot delete trip of another user.");
+        try {
+            Trip trip = getTrip(id);
+
+            if (user.getRole() != Role.ADMIN && !trip.getAuthor().getId().equals(user.getId())) {
+                throw new AccessDeniedException("Cannot delete trip of another user.");
+            }
+            userService.removeTrip(user, trip);
+            tripService.remove(trip);
+        } catch (NotFoundException e) {
+            throw new NotFoundException(e.getMessage());
         }
-        userService.removeTrip(user, trip);
-        tripService.remove(trip);
+
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")

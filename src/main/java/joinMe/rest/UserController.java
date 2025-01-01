@@ -1,6 +1,7 @@
 package joinMe.rest;
 
 import joinMe.db.entity.User;
+import joinMe.db.exception.NotFoundException;
 import joinMe.db.exception.ValidationException;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.UserDTO;
@@ -73,15 +74,12 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')") // Ensures only admins can access this method
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        final HttpHeaders headers = new HttpHeaders();
+    public void deleteUser(@PathVariable Integer id) {
+        User user = userService.findByID(id);
 
-        if (userService.delete(id)) {
-            LOG.debug("User with ID {} successfully deleted.", id);
-            headers.add("INFO-MESSAGE", "User with ID " + id + " successfully deleted.");
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).headers(headers).build();
+        if (user == null) {
+            throw NotFoundException.create("User", id);
         }
-        headers.add("ERROR-MESSAGE", "User with ID " + id + " not found.");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        userService.remove(user);
     }
 }

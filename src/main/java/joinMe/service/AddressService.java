@@ -24,6 +24,10 @@ public class AddressService {
         dao.persist(address);
     }
 
+    public void update(Address address) {
+        dao.update(address);
+    }
+
     public void addResident(Address address, User resident) {
         Objects.requireNonNull(address);
         Objects.requireNonNull(resident);

@@ -2,10 +2,7 @@ package joinMe.db.entity;
 
 import jakarta.persistence.*;
 import joinMe.util.Constants;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Entity
@@ -31,5 +28,6 @@ public class JoinRequest extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private RequestStatus status;
+    @Builder.Default
+    private RequestStatus status = Constants.DEFAULT_REQUEST_STATUS;
 }
