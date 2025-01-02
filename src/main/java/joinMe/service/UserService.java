@@ -73,13 +73,15 @@ public class UserService {
 
     @Transactional
     public void persist(User user) {
+        Objects.requireNonNull(user);
+
         if (userDao.findByEmail(user.getEmail()) != null) {
             throw new IllegalArgumentException("User with this email already exists");
         }
         if (userDao.findByUsername(user.getUsername()) != null) {
             throw new IllegalArgumentException("User with this username already exists");
         }
-        Objects.requireNonNull(user);
+
         user.encodePassword(passwordEncoder);
         userDao.persist(user);
     }

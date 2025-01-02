@@ -134,6 +134,7 @@ public class Mapper {
 
     public User toEntity(UserDTO userDTO) {
         return User.builder()
+                .id(userDTO.getId())
                 .address(toEntity(userDTO.getAddress()))
                 .status(userDTO.getStatus())
                 .rating(userDTO.getRating())
@@ -151,6 +152,7 @@ public class Mapper {
 
     public Trip toEntity(TripDTO tripDTO) {
         return Trip.builder()
+                .id(tripDTO.getId())
                 .startDate(tripDTO.getStartDate())
                 .endDate(tripDTO.getEndDate())
                 .capacity(tripDTO.getCapacity())
@@ -198,14 +200,6 @@ public class Mapper {
                 .id(complaintDTO.getId())
                 .accused(toEntity(complaintDTO.getAccused()))
                 .description(complaintDTO.getDescription())
-                .build();
-    }
-
-    public Wishlist toEntity(WishlistDTO wishlistDTO) {
-        return Wishlist.builder()
-                .id(wishlistDTO.getId())
-                .owner(toEntity(wishlistDTO.getOwner()))
-                .trip(toEntity(wishlistDTO.getTrip()))
                 .build();
     }
 }

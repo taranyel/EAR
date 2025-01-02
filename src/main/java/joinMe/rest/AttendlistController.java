@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,6 +48,7 @@ public class AttendlistController {
         this.mapper = mapper;
     }
 
+    @PreAuthorize("!anonymous")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<AttendlistDTO> getCurrentUserAttendLists(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
@@ -57,6 +59,7 @@ public class AttendlistController {
                 .toList();
     }
 
+    @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<MessageDTO> getAttendList(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
@@ -67,6 +70,7 @@ public class AttendlistController {
                 .toList();
     }
 
+    @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}/users", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<UserDTO> getAllJoinersOfAttendlist(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
@@ -76,30 +80,47 @@ public class AttendlistController {
                 .toList();
     }
 
+    @PreAuthorize("!anonymous")
     @PostMapping(value = "/{attendlistID}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> addMessage(Authentication auth, @PathVariable int attendlistID, @RequestBody MessageDTO messageDTO) {
+    public ResponseEntity<String> addMessage(Authentication auth, @PathVariable int attendlistID, @RequestBody MessageDTO messageDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        Attendlist attendlist = getAttendlist(user, attendlistID);
-
         Message message = mapper.toEntity(messageDTO);
 
-        if (attendlistID != message.getAttendlist().getId() || !Objects.equals(message.getAuthor().getId(), user.getId())) {
-            throw new AccessDeniedException("Wrong attendlist or you are not author of the message.");
-        }
+        try {
+            Attendlist attendlist = getAttendlist(user, attendlistID);
 
-        attendlistService.addMessage(attendlist, message);
-        messageService.persist(message);
-        LOG.debug("Added message {}.", messageDTO);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+            if (attendlistID != message.getAttendlist().getId() || !Objects.equals(message.getAuthor().getId(), user.getId())) {
+                return new ResponseEntity<>("Wrong attendlist or you are not author of the message.", HttpStatus.FORBIDDEN);
+            }
+
+            attendlistService.addMessage(attendlist, message);
+            messageService.persist(message);
+            LOG.debug("Added message {}.", messageDTO);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
     }
 
+    @PreAuthorize("!anonymous")
     @DeleteMapping(value = "/{id}")
-    public void leaveAttendlist(Authentication auth, @PathVariable int id) {
+    public ResponseEntity<String> leaveAttendlist(Authentication auth, @PathVariable int id) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        Attendlist attendlist = getAttendlist(user, id);
-        userService.leaveAttendlist(user, attendlist);
+
+        try {
+            Attendlist attendlist = getAttendlist(user, id);
+            userService.leaveAttendlist(user, attendlist);
+            return new ResponseEntity<>("Attend list has been leaved.", HttpStatus.OK);
+
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
     }
 
     private Attendlist getAttendlist(User user, int id) {
