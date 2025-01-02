@@ -144,7 +144,6 @@ public class Mapper {
                 .imagePath(userDTO.getImagePath())
                 .lastName(userDTO.getLastName())
                 .rating(userDTO.getRating())
-                .role(userDTO.getRole())
                 .username(userDTO.getUsername())
                 .password(userDTO.getPassword())
                 .build();

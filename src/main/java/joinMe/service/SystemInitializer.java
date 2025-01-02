@@ -58,13 +58,12 @@ public class SystemInitializer {
         }
         User admin = createUser();
         Address address = createAddress();
-        addressService.persist(address);
 
         admin.setAddress(address);
         userService.persist(admin);
         addressService.addResident(address, admin);
 
-        LOG.info("Generated admin user with credentials " + admin.getUsername() + "/" + admin.getPassword());
+        LOG.info("Generated admin user with credentials {}/{}", admin.getUsername(), admin.getPassword());
     }
 
     private Address createAddress() {
