@@ -60,9 +60,9 @@ public class TripController {
             throw new ValidationException("Trip identifier in the data does not match the one in the request URL.");
         }
 
-        Trip newTrip = mapper.toEntity(tripDTO);
-        tripService.update(newTrip);
-        LOG.debug("Updated trip {}.", newTrip);
+        Trip tripToUpdate = mapper.toEntity(tripDTO);
+        tripService.update(trip, tripToUpdate);
+        LOG.debug("Updated trip {}.", tripDTO);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -72,13 +72,8 @@ public class TripController {
 
         Trip trip = mapper.toEntity(tripDTO);
 
-        if (trip.getAuthor() != user) {
-            throw new AccessDeniedException("Cannot add trip of another user.");
-        }
-
         userService.addTrip(user, trip);
         Attendlist attendlist = attendlistService.create(user, trip);
-        userService.addAttendlist(user, attendlist);
 
         LOG.debug("Created trip {}.", trip);
         LOG.debug("Created attend list {}.", attendlist);

@@ -29,9 +29,19 @@ public class TripService {
     }
 
     @Transactional
-    public void update(Trip trip) {
-        Objects.requireNonNull(trip);
-        tripDao.update(trip);
+    public void update(Trip current, Trip newTrip) {
+        Objects.requireNonNull(current);
+        Objects.requireNonNull(newTrip);
+
+        current.setCountry(newTrip.getCountry());
+        current.setDescription(newTrip.getDescription());
+        current.setStartDate(newTrip.getStartDate());
+        current.setEndDate(newTrip.getEndDate());
+        current.setCapacity(newTrip.getCapacity());
+        current.setImagePath(newTrip.getImagePath());
+        current.setTitle(newTrip.getTitle());
+
+        tripDao.update(current);
     }
 
     @Transactional

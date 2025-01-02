@@ -36,7 +36,7 @@ public abstract class Address extends AbstractEntity {
     @Column(name = "country", nullable = false)
     private String country;
 
-    @OneToMany()
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "address_id")
     @Builder.Default
     private List<User> residents = new ArrayList<>();

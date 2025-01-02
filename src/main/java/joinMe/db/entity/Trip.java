@@ -70,12 +70,12 @@ public class Trip extends AbstractEntity {
     @JoinColumn(nullable = false)
     private User author;
 
-    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id")
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
-    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id")
     @Builder.Default
     private List<Attendlist> attendlists = new ArrayList<>();

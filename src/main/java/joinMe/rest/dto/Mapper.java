@@ -134,7 +134,6 @@ public class Mapper {
 
     public User toEntity(UserDTO userDTO) {
         return User.builder()
-                .id(userDTO.getId())
                 .address(toEntity(userDTO.getAddress()))
                 .status(userDTO.getStatus())
                 .rating(userDTO.getRating())
@@ -151,26 +150,10 @@ public class Mapper {
     }
 
     public Trip toEntity(TripDTO tripDTO) {
-        List<Comment> comments = tripDTO.getComments()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
-        List<Attendlist> attendlists = tripDTO.getAttendlists()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
         return Trip.builder()
-                .id(tripDTO.getId())
-                .status(tripDTO.getStatus())
-                .attendlists(attendlists)
-                .comments(comments)
                 .startDate(tripDTO.getStartDate())
                 .endDate(tripDTO.getEndDate())
-                .author(toEntity(tripDTO.getAuthor()))
                 .capacity(tripDTO.getCapacity())
-                .created(tripDTO.getCreated())
                 .description(tripDTO.getDescription())
                 .imagePath(tripDTO.getImagePath())
                 .title(tripDTO.getTitle())

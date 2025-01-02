@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,6 +16,8 @@ import java.util.Objects;
 public class UserService {
 
     private final UserDao userDao;
+
+    private final TripDao tripDao;
 
     private final JoinRequestDao joinRequestDao;
 
@@ -29,19 +32,37 @@ public class UserService {
 
     @Autowired
     public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao,
-                       ComplaintDao complaintDao, WishlistDao wishlistDao, PasswordEncoder passwordEncoder) {
+                       ComplaintDao complaintDao, WishlistDao wishlistDao, PasswordEncoder passwordEncoder, TripDao tripDao) {
         this.userDao = userDao;
         this.joinRequestDao = joinRequestDao;
         this.attendlistDao = attendlistDao;
         this.complaintDao = complaintDao;
         this.wishlistDao = wishlistDao;
         this.passwordEncoder = passwordEncoder;
+        this.tripDao = tripDao;
     }
 
     @Transactional
-    public void update(User user) {
-        Objects.requireNonNull(user);
-        userDao.update(user);
+    public void update(User current, User newUser) throws AccessDeniedException {
+        Objects.requireNonNull(current);
+        Objects.requireNonNull(newUser);
+
+        if (userDao.findByEmail(newUser.getEmail()) != null && !Objects.equals(current.getEmail(), newUser.getEmail())) {
+            throw new AccessDeniedException("User with email already exists.");
+        }
+
+        if (userDao.findByUsername(newUser.getUsername()) != null && !Objects.equals(current.getUsername(), newUser.getUsername())) {
+            throw new AccessDeniedException("User with username already exists.");
+        }
+
+        current.setFirstName(newUser.getFirstName());
+        current.setLastName(newUser.getLastName());
+        current.setEmail(newUser.getEmail());
+        current.setPassword(passwordEncoder.encode(newUser.getPassword()));
+        current.setUsername(newUser.getUsername());
+        current.setImagePath(newUser.getImagePath());
+        current.setBirthdate(newUser.getBirthdate());
+        userDao.update(current);
     }
 
     @Transactional
@@ -74,6 +95,7 @@ public class UserService {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
         trip.setAuthor(user);
+        tripDao.persist(trip);
         user.addTrip(trip);
         userDao.update(user);
     }

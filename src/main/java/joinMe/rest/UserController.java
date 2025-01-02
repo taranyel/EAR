@@ -2,7 +2,6 @@ package joinMe.rest;
 
 import joinMe.db.entity.User;
 import joinMe.db.exception.NotFoundException;
-import joinMe.db.exception.ValidationException;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.UserDTO;
 import joinMe.rest.util.RestUtils;
@@ -18,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.file.AccessDeniedException;
 
 @RestController
 @RequestMapping("/users")
@@ -52,17 +53,13 @@ public class UserController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
     @PutMapping(value = "/current", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateUser(Authentication auth, @RequestBody UserDTO userDTO) {
+    public void updateUser(Authentication auth, @RequestBody UserDTO userDTO) throws AccessDeniedException {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        if (!user.getId().equals(userDTO.getId())) {
-            throw new ValidationException("You cannot change data of another user.");
-        }
 
-        User newUser = mapper.toEntity(userDTO);
-        userService.update(newUser);
-        LOG.debug("Updated user {}.", newUser);
+        User userToUpdate = mapper.toEntity(userDTO);
+        userService.update(user, userToUpdate);
+        LOG.info("Updated user {}.", userDTO);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
@@ -73,7 +70,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')") // Ensures only admins can access this method
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void deleteUser(@PathVariable Integer id) {
         User user = userService.findByID(id);
 

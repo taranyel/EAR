@@ -68,15 +68,15 @@ public class User extends AbstractEntity {
     @Column(name = "image_path")
     private String imagePath;
 
-    @ManyToOne(optional = false, cascade = CascadeType.MERGE)
+    @ManyToOne(optional = false, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinColumn(nullable = false)
     private Address address;
 
-    @OneToMany(mappedBy = "accused", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "accused", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<Complaint> complaints = new ArrayList<>();
 
-    @OneToMany(mappedBy = "joiner")
+    @OneToMany(mappedBy = "joiner", fetch = FetchType.EAGER)
     @Builder.Default
     private List<Attendlist> attendlists = new ArrayList<>();
 
@@ -85,11 +85,11 @@ public class User extends AbstractEntity {
     @Builder.Default
     private List<Trip> trips = new ArrayList<>();
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<Wishlist> wishlists = new ArrayList<>();
 
-    @OneToMany(mappedBy = "requester", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "requester", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<JoinRequest> joinRequests = new ArrayList<>();
 
