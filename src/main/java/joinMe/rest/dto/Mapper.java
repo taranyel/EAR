@@ -105,7 +105,6 @@ public class Mapper {
     public MessageDTO toDto(Message message) {
         return MessageDTO.builder()
                 .id(message.getId())
-                .attendlist(toDto(message.getAttendlist()))
                 .author(toDto(message.getAuthor()))
                 .text(message.getText())
                 .time(message.getTime())
@@ -188,8 +187,6 @@ public class Mapper {
         return Message.builder()
                 .id(messageDTO.getId())
                 .text(messageDTO.getText())
-                .author(toEntity(messageDTO.getAuthor()))
-                .attendlist(toEntity(messageDTO.getAttendlist()))
                 .time(time)
                 .build();
     }

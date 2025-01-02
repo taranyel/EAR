@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/trips")
@@ -60,6 +61,10 @@ public class TripController {
 
         if (trip == null) {
             return new ResponseEntity<>("Trip with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+        }
+
+        if (!Objects.equals(id, tripDTO.getId())) {
+            return new ResponseEntity<>("You can modify only your trips.", HttpStatus.FORBIDDEN);
         }
 
         if (user.getRole() != Role.ADMIN && !trip.getAuthor().getId().equals(user.getId())) {
@@ -130,7 +135,8 @@ public class TripController {
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TripDTO> getCurrentUserTrips(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
         return user.getTrips()
                 .stream()
                 .map(mapper::toDto)

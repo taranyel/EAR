@@ -119,7 +119,8 @@ public class JoinRequestController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<JoinRequestDTO> getAllJoinRequests(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
         return user.getJoinRequests()
                 .stream()
                 .map(mapper::toDto)
@@ -130,7 +131,8 @@ public class JoinRequestController {
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public JoinRequestDTO getJoinRequest(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
 
         try {
             return mapper.toDto(getJoinRequestForRequester(user, id));
@@ -143,7 +145,8 @@ public class JoinRequestController {
     @GetMapping(value = "/forApproval", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<JoinRequestDTO> getAllJoinRequestsForApproval(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
         return joinRequestService.getJoinRequestsForApproval(user)
                 .stream()
                 .map(mapper::toDto)
@@ -154,7 +157,8 @@ public class JoinRequestController {
     @GetMapping(value = "/forApproval/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public JoinRequestDTO getJoinRequestForApprovalByID(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
 
         try {
             JoinRequest joinRequest = getJoinRequestForApproval(user, id);

@@ -43,7 +43,8 @@ public class ComplaintController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createComplaint(Authentication auth, @RequestBody ComplaintDTO complaintDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
         Complaint complaint = mapper.toEntity(complaintDTO);
 
         try {
@@ -77,7 +78,8 @@ public class ComplaintController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ComplaintDTO> getComplaintsToCurrentUser(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
         return user.getComplaints()
                 .stream()
                 .map(mapper::toDto)

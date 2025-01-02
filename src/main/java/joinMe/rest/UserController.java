@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/users")
@@ -62,6 +63,10 @@ public class UserController {
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
         User userToUpdate = mapper.toEntity(userDTO);
 
+        if (!Objects.equals(user.getId(), userDTO.getId())) {
+            return new ResponseEntity<>("Cannot change data of another user.", HttpStatus.FORBIDDEN);
+        }
+
         try {
             userService.update(user, userToUpdate);
             LOG.info("Updated user {}.", userDTO);
@@ -75,7 +80,9 @@ public class UserController {
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserDTO getCurrent(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        return mapper.toDto(((UserDetails) auth.getPrincipal()).getUser());
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
+        return mapper.toDto(user);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

@@ -11,7 +11,6 @@ import joinMe.rest.dto.MessageDTO;
 import joinMe.rest.dto.UserDTO;
 import joinMe.security.model.UserDetails;
 import joinMe.service.AttendlistService;
-import joinMe.service.MessageService;
 import joinMe.service.TripService;
 import joinMe.service.UserService;
 import joinMe.util.MessageComparator;
@@ -27,7 +26,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/attendlists")
@@ -37,8 +35,6 @@ public class AttendlistController {
 
     private final AttendlistService attendlistService;
 
-    private final MessageService messageService;
-
     private final TripService tripService;
 
     private final UserService userService;
@@ -46,10 +42,9 @@ public class AttendlistController {
     private final Mapper mapper;
 
     @Autowired
-    public AttendlistController(AttendlistService attendlistService, MessageService messageService,
-                                UserService userService, Mapper mapper, TripService tripService) {
+    public AttendlistController(AttendlistService attendlistService, UserService userService,
+                                Mapper mapper, TripService tripService) {
         this.attendlistService = attendlistService;
-        this.messageService = messageService;
         this.userService = userService;
         this.mapper = mapper;
         this.tripService = tripService;
@@ -59,7 +54,8 @@ public class AttendlistController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<AttendlistDTO> getCurrentUserAttendLists(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
         return user.getAttendlists()
                 .stream()
                 .map(mapper::toDto)
@@ -68,9 +64,7 @@ public class AttendlistController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{tripID}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<MessageDTO> getAttendList(Authentication auth, @PathVariable Integer tripID) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+    public List<MessageDTO> getAttendList(@PathVariable Integer tripID) {
         Trip trip = tripService.findByID(tripID);
 
         if (trip == null) {
@@ -107,6 +101,7 @@ public class AttendlistController {
     public ResponseEntity<String> addMessage(Authentication auth, @PathVariable int tripID, @RequestBody MessageDTO messageDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
+
         Message message = mapper.toEntity(messageDTO);
         Trip trip = tripService.findByID(tripID);
 
@@ -116,10 +111,6 @@ public class AttendlistController {
 
         try {
             Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, user);
-
-            if (tripID != message.getAttendlist().getId() || !Objects.equals(message.getAuthor().getId(), user.getId())) {
-                return new ResponseEntity<>("Wrong attendlist or you are not author of the message.", HttpStatus.FORBIDDEN);
-            }
 
             attendlistService.addMessage(attendlist, message);
             LOG.debug("Added message {}.", messageDTO);

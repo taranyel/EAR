@@ -22,7 +22,7 @@ import java.util.Objects;
 })
 public class Attendlist extends AbstractEntity{
 
-    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "attendlist_id")
     private List<Message> messages;
 
