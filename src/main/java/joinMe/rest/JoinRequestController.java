@@ -8,10 +8,10 @@ import joinMe.db.exception.JoinRequestException;
 import joinMe.db.exception.NotFoundException;
 import joinMe.rest.dto.JoinRequestDTO;
 import joinMe.rest.dto.Mapper;
-import joinMe.rest.dto.TripDTO;
 import joinMe.rest.util.RestUtils;
 import joinMe.security.model.UserDetails;
 import joinMe.service.JoinRequestService;
+import joinMe.service.TripService;
 import joinMe.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,21 +37,28 @@ public class JoinRequestController {
 
     private final UserService userService;
 
+    private final TripService tripService;
+
     private final Mapper mapper;
 
     @Autowired
-    public JoinRequestController(JoinRequestService joinRequestService, UserService userService, Mapper mapper) {
+    public JoinRequestController(JoinRequestService joinRequestService, UserService userService, Mapper mapper, TripService tripService) {
         this.joinRequestService = joinRequestService;
         this.userService = userService;
         this.mapper = mapper;
+        this.tripService = tripService;
     }
 
     @PreAuthorize("!anonymous")
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createJoinRequest(Authentication auth, @RequestBody TripDTO tripDTO) {
+    @PostMapping(value = "/{tripID}")
+    public ResponseEntity<String> createJoinRequest(Authentication auth, @PathVariable int tripID) {
         assert auth.getPrincipal() instanceof UserDetails;
         User user = ((UserDetails) auth.getPrincipal()).getUser();
-        Trip trip = mapper.toEntity(tripDTO);
+        Trip trip = tripService.findByID(tripID);
+
+        if (trip == null) {
+            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
+        }
 
         try {
             JoinRequest joinRequest = joinRequestService.create(user, trip);

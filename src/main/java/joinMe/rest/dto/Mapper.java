@@ -3,6 +3,7 @@ package joinMe.rest.dto;
 import joinMe.db.entity.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -107,6 +108,7 @@ public class Mapper {
                 .attendlist(toDto(message.getAttendlist()))
                 .author(toDto(message.getAuthor()))
                 .text(message.getText())
+                .time(message.getTime())
                 .build();
     }
 
@@ -177,11 +179,18 @@ public class Mapper {
     }
 
     public Message toEntity(MessageDTO messageDTO) {
+        LocalDateTime time = LocalDateTime.now();
+
+        if (messageDTO.getTime() != null) {
+            time = messageDTO.getTime();
+        }
+
         return Message.builder()
                 .id(messageDTO.getId())
                 .text(messageDTO.getText())
                 .author(toEntity(messageDTO.getAuthor()))
                 .attendlist(toEntity(messageDTO.getAttendlist()))
+                .time(time)
                 .build();
     }
 

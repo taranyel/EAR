@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
+
 @Setter
 @Getter
 @Entity
@@ -22,6 +24,10 @@ public class Message extends AbstractEntity {
     @Basic(optional = false)
     @Column(name = "text", nullable = false)
     private String text;
+
+    @Basic(optional = false)
+    @Column(name = "time", nullable = false)
+    private LocalDateTime time;
 
     @ManyToOne
     @JoinColumn(nullable = false)

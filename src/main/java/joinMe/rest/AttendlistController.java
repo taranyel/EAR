@@ -2,6 +2,7 @@ package joinMe.rest;
 
 import joinMe.db.entity.Attendlist;
 import joinMe.db.entity.Message;
+import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
 import joinMe.db.exception.NotFoundException;
 import joinMe.rest.dto.AttendlistDTO;
@@ -11,7 +12,9 @@ import joinMe.rest.dto.UserDTO;
 import joinMe.security.model.UserDetails;
 import joinMe.service.AttendlistService;
 import joinMe.service.MessageService;
+import joinMe.service.TripService;
 import joinMe.service.UserService;
+import joinMe.util.MessageComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,16 +39,20 @@ public class AttendlistController {
 
     private final MessageService messageService;
 
+    private final TripService tripService;
+
     private final UserService userService;
 
     private final Mapper mapper;
 
     @Autowired
-    public AttendlistController(AttendlistService attendlistService, MessageService messageService, UserService userService, Mapper mapper) {
+    public AttendlistController(AttendlistService attendlistService, MessageService messageService,
+                                UserService userService, Mapper mapper, TripService tripService) {
         this.attendlistService = attendlistService;
         this.messageService = messageService;
         this.userService = userService;
         this.mapper = mapper;
+        this.tripService = tripService;
     }
 
     @PreAuthorize("!anonymous")
@@ -60,42 +67,61 @@ public class AttendlistController {
     }
 
     @PreAuthorize("!anonymous")
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<MessageDTO> getAttendList(Authentication auth, @PathVariable Integer id) {
+    @GetMapping(value = "/{tripID}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<MessageDTO> getAttendList(Authentication auth, @PathVariable Integer tripID) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-        return getAttendlist(user, id).getMessages()
+        Trip trip = tripService.findByID(tripID);
+
+        if (trip == null) {
+            return null;
+        }
+
+        List<Attendlist> attendlists = attendlistService.findByTrip(trip);
+        if (attendlists.isEmpty()) {
+            return null;
+        }
+
+        return attendlists
                 .stream()
-                .map(mapper::toDto)
+                .flatMap(attendlist -> attendlist.getMessages()
+                        .stream()
+                        .sorted(MessageComparator::compare)
+                        .map(mapper::toDto))
                 .toList();
     }
 
     @PreAuthorize("!anonymous")
-    @GetMapping(value = "/{id}/users", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<UserDTO> getAllJoinersOfAttendlist(Authentication auth, @PathVariable Integer id) {
+    @GetMapping(value = "/{tripID}/users", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<UserDTO> getAllJoinersOfTrip(Authentication auth, @PathVariable Integer tripID) {
         assert auth.getPrincipal() instanceof UserDetails;
-        return userService.getAllJoinersOfAttendlistByID(id)
+        Trip trip = tripService.findByID(tripID);
+        return userService.getAllJoinersOfTrip(trip)
                 .stream()
                 .map(mapper::toDto)
                 .toList();
     }
 
     @PreAuthorize("!anonymous")
-    @PostMapping(value = "/{attendlistID}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addMessage(Authentication auth, @PathVariable int attendlistID, @RequestBody MessageDTO messageDTO) {
+    @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> addMessage(Authentication auth, @PathVariable int tripID, @RequestBody MessageDTO messageDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
         Message message = mapper.toEntity(messageDTO);
+        Trip trip = tripService.findByID(tripID);
+
+        if (trip == null) {
+            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
+        }
 
         try {
-            Attendlist attendlist = getAttendlist(user, attendlistID);
+            Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, user);
 
-            if (attendlistID != message.getAttendlist().getId() || !Objects.equals(message.getAuthor().getId(), user.getId())) {
+            if (tripID != message.getAttendlist().getId() || !Objects.equals(message.getAuthor().getId(), user.getId())) {
                 return new ResponseEntity<>("Wrong attendlist or you are not author of the message.", HttpStatus.FORBIDDEN);
             }
 
             attendlistService.addMessage(attendlist, message);
-            messageService.persist(message);
             LOG.debug("Added message {}.", messageDTO);
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (NotFoundException e) {

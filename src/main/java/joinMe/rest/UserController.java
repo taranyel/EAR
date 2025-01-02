@@ -89,4 +89,16 @@ public class UserController {
         userService.remove(user);
         return new ResponseEntity<>("User was successfully deleted.", HttpStatus.OK);
     }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/{id}/admin")
+    public ResponseEntity<String> makeAdmin(@PathVariable Integer id) {
+        User user = userService.findByID(id);
+
+        if (user == null) {
+            return new ResponseEntity<>("User was not found", HttpStatus.NOT_FOUND);
+        }
+        userService.setAdmin(user);
+        return new ResponseEntity<>("New admin was successfully set.", HttpStatus.OK);
+    }
 }
