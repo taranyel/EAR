@@ -8,6 +8,7 @@ import joinMe.db.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -106,7 +107,7 @@ public class TripService {
     }
 
     @Transactional
-    public List<Trip> findByStartDate(Date startDate) {
+    public List<Trip> findByStartDate(LocalDate startDate) {
         Objects.requireNonNull(startDate);
         return tripDao.findByStartDate(startDate);
     }

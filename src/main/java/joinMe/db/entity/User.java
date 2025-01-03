@@ -1,5 +1,6 @@
 package joinMe.db.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import joinMe.util.Constants;
 import lombok.*;
@@ -74,23 +75,28 @@ public class User extends AbstractEntity {
 
     @OneToMany(mappedBy = "accused", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
+    @JsonIgnore
     private List<Complaint> complaints = new ArrayList<>();
 
     @OneToMany(mappedBy = "joiner", fetch = FetchType.EAGER)
     @Builder.Default
+    @JsonIgnore
     private List<Attendlist> attendlists = new ArrayList<>();
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("created")
     @Builder.Default
+    @JsonIgnore
     private List<Trip> trips = new ArrayList<>();
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
+    @JsonIgnore
     private List<Wishlist> wishlists = new ArrayList<>();
 
     @OneToMany(mappedBy = "requester", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
+    @JsonIgnore
     private List<JoinRequest> joinRequests = new ArrayList<>();
 
     public void encodePassword(PasswordEncoder encoder) {
@@ -99,10 +105,6 @@ public class User extends AbstractEntity {
 
     public void erasePassword() {
         this.password = null;
-    }
-
-    public boolean isAdmin() {
-        return role == Role.ADMIN;
     }
 
     public void addTrip(Trip trip) {
