@@ -100,7 +100,8 @@ public class AttendlistController {
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addMessage(Authentication auth, @PathVariable int tripID, @RequestBody MessageDTO messageDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
 
         Message message = mapper.toEntity(messageDTO);
         Trip trip = tripService.findByID(tripID);
@@ -110,6 +111,7 @@ public class AttendlistController {
         }
 
         try {
+            User.isBlocked(user);
             Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, user);
 
             attendlistService.addMessage(attendlist, message);

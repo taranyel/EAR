@@ -53,7 +53,9 @@ public class JoinRequestController {
     @PostMapping(value = "/{tripID}")
     public ResponseEntity<String> createJoinRequest(Authentication auth, @PathVariable int tripID) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
+
         Trip trip = tripService.findByID(tripID);
 
         if (trip == null) {
@@ -61,13 +63,14 @@ public class JoinRequestController {
         }
 
         try {
+            User.isBlocked(user);
             JoinRequest joinRequest = joinRequestService.create(user, trip);
             userService.addJoinRequest(joinRequest);
 
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", joinRequest.getId());
             return new ResponseEntity<>(headers, HttpStatus.CREATED);
 
-        } catch (JoinRequestException e) {
+        } catch (JoinRequestException | AccessDeniedException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
@@ -101,9 +104,11 @@ public class JoinRequestController {
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> cancelJoinRequest(Authentication auth, @PathVariable int id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
 
         try {
+            User.isBlocked(user);
             JoinRequest joinRequest = getJoinRequestForRequester(user, id);
             userService.cancelJoinRequest(user, joinRequest);
             return new ResponseEntity<>("Join request was canceled.", HttpStatus.OK);
@@ -172,9 +177,11 @@ public class JoinRequestController {
     @GetMapping(value = "/approve/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> approveJoinRequest(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
 
         try {
+            User.isBlocked(user);
             JoinRequest joinRequest = getJoinRequestForApproval(user, id);
             userService.approveJoinRequest(joinRequest);
             return new ResponseEntity<>("Join request was approved.", HttpStatus.OK);
@@ -190,9 +197,11 @@ public class JoinRequestController {
     @GetMapping(value = "/reject/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> rejectJoinRequest(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
 
         try {
+            User.isBlocked(user);
             JoinRequest joinRequest = getJoinRequestForApproval(user, id);
             userService.rejectJoinRequest(joinRequest);
             return new ResponseEntity<>("Join request was rejected.", HttpStatus.OK);

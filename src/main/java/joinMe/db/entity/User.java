@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import joinMe.util.Constants;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
@@ -96,10 +97,6 @@ public class User extends AbstractEntity {
         this.password = encoder.encode(password);
     }
 
-    public void erasePassword() {
-        this.password = null;
-    }
-
     public boolean isAdmin() {
         return role == Role.ADMIN;
     }
@@ -152,5 +149,11 @@ public class User extends AbstractEntity {
     public void removeJoinRequest(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         joinRequests.remove(joinRequest);
+    }
+
+    public static void isBlocked(User user) throws AccessDeniedException {
+        if (user.getStatus() == AccountStatus.BLOCKED) {
+            throw new AccessDeniedException("Your account is blocked.");
+        }
     }
 }

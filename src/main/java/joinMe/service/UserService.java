@@ -2,7 +2,6 @@ package joinMe.service;
 
 import joinMe.db.dao.*;
 import joinMe.db.entity.*;
-import joinMe.db.exception.JoinRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -134,29 +133,6 @@ public class UserService {
         user.removeComplaint(complaint);
         userDao.update(user);
         complaintDao.remove(complaint);
-    }
-
-    public void addAttendlist(User user, Attendlist attendlist) {
-        Objects.requireNonNull(user);
-        Objects.requireNonNull(attendlist);
-
-        User tripCreator = attendlist.getAdmin();
-
-        if (user == tripCreator) {
-            throw new JoinRequestException("Creator added to the trip automatically.");
-        }
-
-        JoinRequest existingRequest = joinRequestDao.findByRequesterAndTrip(attendlist.getJoiner(), attendlist.getTrip());
-        if (existingRequest == null) {
-            throw new JoinRequestException("Joiner cannot be added to attendlist without join request.");
-        }
-
-        if (existingRequest.getStatus() != RequestStatus.APPROVED) {
-            throw new JoinRequestException("Joiner cannot be added to attendlist without approval.");
-        }
-
-        user.addAttendlist(attendlist);
-        userDao.update(user);
     }
 
     public void leaveAttendlist(User user, Attendlist attendlist) {

@@ -8,7 +8,6 @@ import joinMe.db.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -97,36 +96,6 @@ public class TripService {
     @Transactional
     public List<Trip> findAllActiveTrips() {
         return tripDao.findByStatus(TripStatus.ACTIVE);
-    }
-
-    @Transactional
-    public List<Trip> findByCountry(String country) {
-        Objects.requireNonNull(country);
-        return tripDao.findByCountry(country);
-    }
-
-    @Transactional
-    public List<Trip> findByStartDate(Date startDate) {
-        Objects.requireNonNull(startDate);
-        return tripDao.findByStartDate(startDate);
-    }
-
-    @Transactional
-    public List<Trip> findByEndDate(Date endDate) {
-        Objects.requireNonNull(endDate);
-        return tripDao.findByEndDate(endDate);
-    }
-
-    @Transactional
-    public List<Trip> findByCapacity(Integer capacity) {
-        Objects.requireNonNull(capacity);
-        return tripDao.findByCapacity(capacity);
-    }
-
-    @Transactional
-    public List<Trip> findByAuthor(User author) {
-        Objects.requireNonNull(author);
-        return tripDao.findByAuthor(author);
     }
 
     @Transactional

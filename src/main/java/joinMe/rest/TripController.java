@@ -18,10 +18,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -57,6 +59,12 @@ public class TripController {
         assert auth.getPrincipal() instanceof UserDetails;
         User user = ((UserDetails) auth.getPrincipal()).getUser();
 
+        try {
+            User.isBlocked(user);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
+
         final Trip trip = tripService.findByID(id);
 
         if (trip == null) {
@@ -86,6 +94,7 @@ public class TripController {
         Trip trip = mapper.toEntity(tripDTO);
 
         try {
+            User.isBlocked(user);
             userService.addTrip(user, trip);
             Attendlist attendlist = attendlistService.create(user, trip);
 
@@ -95,6 +104,8 @@ public class TripController {
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", trip.getId());
             return new ResponseEntity<>(headers, HttpStatus.CREATED);
 
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NO_CONTENT);
         }
@@ -107,7 +118,8 @@ public class TripController {
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
 
         try {
-            Trip trip = getTrip(id);
+            User.isBlocked(user);
+            Trip trip = getTripByID(id);
 
             if (user.getRole() != Role.ADMIN && !trip.getAuthor().getId().equals(user.getId())) {
                 return new ResponseEntity<>("Cannot delete trip of another user.", HttpStatus.FORBIDDEN);
@@ -118,6 +130,8 @@ public class TripController {
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
 
@@ -127,6 +141,51 @@ public class TripController {
         LOG.info("Retrieving all active trips.");
         return tripService.findAllActiveTrips()
                 .stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    @PreAuthorize("!anonymous")
+    @GetMapping(value = "/country/{country}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<TripDTO> getAllActiveTripsByCountry(@PathVariable String country) {
+        LOG.info("Retrieving all active trips by country.");
+        return tripService.findAllActiveTrips()
+                .stream()
+                .filter(trip -> trip.getCountry().equals(country))
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    @PreAuthorize("!anonymous")
+    @GetMapping(value = "/author/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<TripDTO> getAllActiveTripsByAuthor(@PathVariable String username) {
+        LOG.info("Retrieving all active trips by author.");
+        return tripService.findAllActiveTrips()
+                .stream()
+                .filter(trip -> trip.getAuthor().getUsername().equals(username))
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    @PreAuthorize("!anonymous")
+    @GetMapping(value = "/capacity/{capacity}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<TripDTO> getAllActiveTripsByCapacity(@PathVariable int capacity) {
+        LOG.info("Retrieving all active trips by capacity.");
+        return tripService.findAllActiveTrips()
+                .stream()
+                .filter(trip -> trip.getCapacity().equals(capacity))
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    @PreAuthorize("!anonymous")
+    @GetMapping(value = "/date/{startDate}/{endDate}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<TripDTO> getAllActiveTripsByDate(@PathVariable LocalDate startDate, @PathVariable LocalDate endDate) {
+        LOG.info("Retrieving all active trips by date.");
+        return tripService.findAllActiveTrips()
+                .stream()
+                .filter(trip -> trip.getStartDate().equals(startDate))
+                .filter(trip -> trip.getEndDate().equals(endDate))
                 .map(mapper::toDto)
                 .toList();
     }
@@ -145,11 +204,11 @@ public class TripController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public TripDTO getTrip(Authentication auth, @PathVariable int id) {
+    public TripDTO getTripByID(Authentication auth, @PathVariable int id) {
         assert auth.getPrincipal() instanceof UserDetails;
 
         try {
-            Trip trip = getTrip(id);
+            Trip trip = getTripByID(id);
             return mapper.toDto(trip);
         } catch (NotFoundException e) {
             return null;
@@ -160,9 +219,12 @@ public class TripController {
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addComment(Authentication auth, @PathVariable int tripID, @RequestBody CommentDTO commentDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
 
         try {
-            Trip trip = getTrip(tripID);
+            User.isBlocked(user);
+            Trip trip = getTripByID(tripID);
             Comment comment = mapper.toEntity(commentDTO);
 
             tripService.addComment(trip, comment);
@@ -172,10 +234,12 @@ public class TripController {
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
 
-    private Trip getTrip(int id) {
+    private Trip getTripByID(int id) {
         Trip trip = tripService.findByID(id);
         if (trip == null) {
             throw NotFoundException.create("Trip", id);

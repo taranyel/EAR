@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +49,7 @@ public class ComplaintController {
         Complaint complaint = mapper.toEntity(complaintDTO);
 
         try {
+            User.isBlocked(user);
             complaintService.persist(complaint);
             userService.addComplaint(user, complaint);
 
@@ -69,6 +71,13 @@ public class ComplaintController {
         if (complaint == null) {
             return new ResponseEntity<>("Complaint with id: " + id + " was not found.", HttpStatus.NOT_FOUND);
         }
+
+        try {
+            User.isBlocked(user);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
+
         userService.removeComplaint(user, complaint);
 
         return new ResponseEntity<>("Complaint was successfully deleted.", HttpStatus.OK);

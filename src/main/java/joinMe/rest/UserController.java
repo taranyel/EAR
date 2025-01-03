@@ -91,7 +91,7 @@ public class UserController {
         User user = userService.findByID(id);
 
         if (user == null) {
-            return new ResponseEntity<>("User was not found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
         }
         userService.remove(user);
         return new ResponseEntity<>("User was successfully deleted.", HttpStatus.OK);
@@ -103,9 +103,33 @@ public class UserController {
         User user = userService.findByID(id);
 
         if (user == null) {
-            return new ResponseEntity<>("User was not found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
         }
         userService.setAdmin(user);
         return new ResponseEntity<>("New admin was successfully set.", HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/{id}/block")
+    public ResponseEntity<String> blockUser(@PathVariable Integer id) {
+        User user = userService.findByID(id);
+
+        if (user == null) {
+            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+        }
+        userService.blockUser(user);
+        return new ResponseEntity<>("User was blocked", HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/{id}/unblock")
+    public ResponseEntity<String> unblockUser(@PathVariable Integer id) {
+        User user = userService.findByID(id);
+
+        if (user == null) {
+            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+        }
+        userService.unblockUser(user);
+        return new ResponseEntity<>("User was unblocked", HttpStatus.OK);
     }
 }

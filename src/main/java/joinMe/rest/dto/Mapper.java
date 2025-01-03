@@ -69,7 +69,7 @@ public class Mapper {
     }
 
     public AttendlistDTO toDto(Attendlist attendlist) {
-        return AttendlistDTO.builder()
+          return AttendlistDTO.builder()
                 .id(attendlist.getId())
                 .joiner(toDto(attendlist.getJoiner()))
                 .trip(toDto(attendlist.getTrip()))
@@ -160,20 +160,6 @@ public class Mapper {
                 .imagePath(tripDTO.getImagePath())
                 .title(tripDTO.getTitle())
                 .country(tripDTO.getCountry())
-                .build();
-    }
-
-    public Attendlist toEntity(AttendlistDTO attendlistDTO) {
-        List<Message> messages = attendlistDTO.getMessages()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
-        return Attendlist.builder()
-                .id(attendlistDTO.getId())
-                .trip(toEntity(attendlistDTO.getTrip()))
-                .messages(messages)
-                .joiner(toEntity(attendlistDTO.getJoiner()))
                 .build();
     }
 
