@@ -111,6 +111,7 @@ public class JoinRequestController {
             User.isBlocked(user);
             JoinRequest joinRequest = getJoinRequestForRequester(user, id);
             userService.cancelJoinRequest(user, joinRequest);
+            joinRequestService.remove(joinRequest);
             return new ResponseEntity<>("Join request was canceled.", HttpStatus.OK);
 
         } catch (NotFoundException e) {

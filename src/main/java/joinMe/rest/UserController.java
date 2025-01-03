@@ -1,10 +1,13 @@
 package joinMe.rest;
 
+import joinMe.db.entity.Address;
 import joinMe.db.entity.User;
 import joinMe.rest.dto.Mapper;
+import joinMe.rest.dto.RegisterDTO;
 import joinMe.rest.dto.UserDTO;
 import joinMe.rest.util.RestUtils;
 import joinMe.security.model.UserDetails;
+import joinMe.service.AddressService;
 import joinMe.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,26 +31,35 @@ public class UserController {
 
     private final UserService userService;
 
+    private final AddressService addressService;
+
     private final Mapper mapper;
 
     @Autowired
-    public UserController(UserService userService, Mapper mapper) {
+    public UserController(UserService userService, Mapper mapper, AddressService addressService) {
         this.userService = userService;
         this.mapper = mapper;
+        this.addressService = addressService;
     }
 
-    /**
-     * Registers a new user.
-     *
-     * @param userDTO User data
-     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> register(@RequestBody UserDTO userDTO) {
-        User user = mapper.toEntity(userDTO);
+    public ResponseEntity<String> register(@RequestBody RegisterDTO registerDTO) {
+        User user = mapper.toEntity(registerDTO.getUser());
+        Address address = mapper.toEntity(registerDTO.getAddress());
+
+        Address existingAddress = addressService.findByAll(address);
+        if (existingAddress != null) {
+            existingAddress.addResident(user);
+            addressService.update(existingAddress);
+            user.setAddress(existingAddress);
+        } else {
+            address.addResident(user);
+            addressService.persist(address);
+            user.setAddress(address);
+        }
 
         try {
             userService.persist(user);
-            LOG.debug("User {} successfully registered.", userDTO);
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
             return new ResponseEntity<>(headers, HttpStatus.CREATED);
 

@@ -68,8 +68,8 @@ public class User extends AbstractEntity {
     @Column(name = "image_path")
     private String imagePath;
 
-    @ManyToOne(optional = false, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-    @JoinColumn(nullable = false)
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn()
     private Address address;
 
     @OneToMany(mappedBy = "accused", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)

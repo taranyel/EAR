@@ -56,6 +56,8 @@ public class ComplaintController {
             LOG.debug("Created complaint {}.", complaintDTO);
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", complaint.getId());
             return new ResponseEntity<>(headers, HttpStatus.CREATED);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NO_CONTENT);
         }
@@ -79,6 +81,7 @@ public class ComplaintController {
         }
 
         userService.removeComplaint(user, complaint);
+        complaintService.remove(complaint);
 
         return new ResponseEntity<>("Complaint was successfully deleted.", HttpStatus.OK);
     }

@@ -95,6 +95,10 @@ public class TripController {
 
         try {
             User.isBlocked(user);
+
+            trip.setAuthor(user);
+            tripService.persist(trip);
+
             userService.addTrip(user, trip);
             Attendlist attendlist = attendlistService.create(user, trip);
 

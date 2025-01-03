@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
+@Transactional
 public class JoinRequestService {
     private final JoinRequestDao dao;
 
@@ -22,36 +23,25 @@ public class JoinRequestService {
         this.dao = dao;
     }
 
-    @Transactional
     public void persist(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         dao.persist(joinRequest);
     }
 
-    @Transactional
     public JoinRequest findByID(Integer id) {
         return dao.find(id);
     }
 
-    @Transactional
-    public List<JoinRequest> findByRequester(User requester) {
-        Objects.requireNonNull(requester);
-        return dao.findByRequester(requester);
-    }
-
-    @Transactional
-    public JoinRequest findByRequesterAndTrip(User requester, Trip trip) {
-        Objects.requireNonNull(requester);
-        return dao.findByRequesterAndTrip(requester, trip);
-    }
-
-    @Transactional
     public List<JoinRequest> getJoinRequestsForApproval(User author) {
         Objects.requireNonNull(author);
         return dao.getJoinRequestsForApproval(author);
     }
 
-    @Transactional
+    public void remove(JoinRequest joinRequest) {
+        Objects.requireNonNull(joinRequest);
+        dao.remove(joinRequest);
+    }
+
     public JoinRequest create(User requester, Trip trip) {
         Objects.requireNonNull(requester);
         Objects.requireNonNull(trip);

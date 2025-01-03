@@ -45,7 +45,6 @@ public class Mapper {
                 .lastName(user.getLastName())
                 .username(user.getUsername())
                 .imagePath(user.getImagePath())
-                .address(toDto(user.getAddress()))
                 .build();
     }
 
@@ -136,7 +135,6 @@ public class Mapper {
     public User toEntity(UserDTO userDTO) {
         return User.builder()
                 .id(userDTO.getId())
-                .address(toEntity(userDTO.getAddress()))
                 .status(userDTO.getStatus())
                 .rating(userDTO.getRating())
                 .birthdate(userDTO.getBirthDate())

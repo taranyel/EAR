@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
+@Transactional
 public class TripService {
 
     private final TripDao tripDao;
@@ -27,7 +28,6 @@ public class TripService {
         this.attendlistDao = attendlistDao;
     }
 
-    @Transactional
     public void update(Trip current, Trip newTrip) {
         Objects.requireNonNull(current);
         Objects.requireNonNull(newTrip);
@@ -43,26 +43,11 @@ public class TripService {
         tripDao.update(current);
     }
 
-    @Transactional
     public void persist(Trip trip) {
         Objects.requireNonNull(trip);
         tripDao.persist(trip);
     }
 
-    @Transactional
-    public boolean update(Integer id, Trip trip) {
-        if (tripDao.exists(id)) {
-            Trip tripOrigin = tripDao.find(id);
-            trip.setAuthor(tripOrigin.getAuthor());
-            trip.setAttendlists(tripOrigin.getAttendlists());
-            trip.setComments(tripOrigin.getComments());
-            tripDao.update(trip);
-            return true;
-        }
-        return false;
-    }
-
-    @Transactional
     public void remove(Trip trip) {
         Objects.requireNonNull(trip);
 
@@ -77,7 +62,6 @@ public class TripService {
         tripDao.remove(trip);
     }
 
-    @Transactional
     public void addComment(Trip trip, Comment comment) {
         Objects.requireNonNull(trip);
         Objects.requireNonNull(comment);
@@ -85,7 +69,6 @@ public class TripService {
         tripDao.update(trip);
     }
 
-    @Transactional
     public void removeComment(Trip trip, Comment comment) {
         Objects.requireNonNull(trip);
         Objects.requireNonNull(comment);
@@ -93,12 +76,10 @@ public class TripService {
         tripDao.update(trip);
     }
 
-    @Transactional
     public List<Trip> findAllActiveTrips() {
         return tripDao.findByStatus(TripStatus.ACTIVE);
     }
 
-    @Transactional
     public Trip findByID(Integer id) {
         return tripDao.find(id);
     }
