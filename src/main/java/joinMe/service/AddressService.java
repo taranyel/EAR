@@ -44,6 +44,19 @@ public class AddressService {
         dao.update(address);
     }
 
+    public void setAddress(Address address, User user) {
+        Address existingAddress = findByAll(address);
+        if (existingAddress == null) {
+            address.addResident(user);
+            dao.persist(address);
+            user.setAddress(address);
+        } else {
+            existingAddress.addResident(user);
+            dao.update(existingAddress);
+            user.setAddress(existingAddress);
+        }
+    }
+
     public Address findByID(int id) {
         return dao.find(id);
     }

@@ -24,14 +24,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
-@EnableWebSecurity     // Allows Spring Security
-@EnableMethodSecurity // Allow methods to be secured using annotation @PreAuthorize and @PostAuthorize
-@Profile("!test")   // Tests should not use this configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+@Profile("!test")
 public class SecurityConfig {
 
     private final ObjectMapper objectMapper;
 
-    // Uncomment this to use a custom authentication provider
     @Autowired
     private AuthenticationProvider authenticationProvider;
 
@@ -43,17 +42,12 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         final AuthenticationSuccess authSuccess = authenticationSuccess();
 
-        // Allow through everything, it will be dealt with using security annotations on methods
         http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .authenticationProvider(authenticationProvider)
-                // Return 401 by default when attempting to access a secured endpoint
                 .exceptionHandling(ehc -> ehc.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-                // Disable CSRF for simplicity
                 .csrf(AbstractHttpConfigurer::disable)
-                // Enable CORS (needed for local development of frontend)
                 .cors(conf -> conf.configurationSource(corsConfigurationSource()))
                 .headers(customizer -> customizer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                // Use custom success and failure handlers (return JSON for React frontend)
                 .formLogin(fl -> fl
                         .loginProcessingUrl("/login")
                         .successHandler(authSuccess)

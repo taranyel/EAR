@@ -44,35 +44,34 @@ public class UserController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> register(@RequestBody RegisterDTO registerDTO) {
+        if (registerDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        } else if (registerDTO.getUser() == null || registerDTO.getAddress() == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
+
         User user = mapper.toEntity(registerDTO.getUser());
         Address address = mapper.toEntity(registerDTO.getAddress());
-
-        Address existingAddress = addressService.findByAll(address);
-        if (existingAddress != null) {
-            existingAddress.addResident(user);
-            addressService.update(existingAddress);
-            user.setAddress(existingAddress);
-        } else {
-            address.addResident(user);
-            addressService.persist(address);
-            user.setAddress(address);
-        }
+        addressService.setAddress(address, user);
 
         try {
             userService.persist(user);
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
             return new ResponseEntity<>(headers, HttpStatus.CREATED);
 
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PreAuthorize("!anonymous")
     @PutMapping(value = "/current", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateUser(Authentication auth, @RequestBody UserDTO userDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        if (userDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userService.getCurrent(auth);
         User userToUpdate = mapper.toEntity(userDTO);
 
         if (!Objects.equals(user.getId(), userDTO.getId())) {
@@ -83,17 +82,15 @@ public class UserController {
             userService.update(user, userToUpdate);
             LOG.info("Updated user {}.", userDTO);
             return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
-        } catch (AccessDeniedException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserDTO getCurrent(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+        User user = userService.getCurrent(auth);
         return mapper.toDto(user);
     }
 

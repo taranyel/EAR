@@ -53,9 +53,8 @@ public class AttendlistController {
     @PreAuthorize("!anonymous")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<AttendlistDTO> getCurrentUserAttendLists(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+        User user = userService.getCurrent(auth);
+
         return user.getAttendlists()
                 .stream()
                 .map(mapper::toDto)
@@ -71,12 +70,7 @@ public class AttendlistController {
             return null;
         }
 
-        List<Attendlist> attendlists = attendlistService.findByTrip(trip);
-        if (attendlists.isEmpty()) {
-            return null;
-        }
-
-        return attendlists
+        return attendlistService.findByTrip(trip)
                 .stream()
                 .flatMap(attendlist -> attendlist.getMessages()
                         .stream()
@@ -99,10 +93,11 @@ public class AttendlistController {
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addMessage(Authentication auth, @PathVariable int tripID, @RequestBody MessageDTO messageDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+        if (messageDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
 
+        User user = userService.getCurrent(auth);
         Message message = mapper.toEntity(messageDTO);
         Trip trip = tripService.findByID(tripID);
 
@@ -119,7 +114,7 @@ public class AttendlistController {
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (AccessDeniedException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
@@ -127,8 +122,7 @@ public class AttendlistController {
     @PreAuthorize("!anonymous")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> leaveAttendlist(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        User user = userService.getCurrent(auth);
 
         try {
             Attendlist attendlist = getAttendlist(user, id);
@@ -137,7 +131,7 @@ public class AttendlistController {
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (AccessDeniedException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }

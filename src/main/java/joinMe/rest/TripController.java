@@ -56,8 +56,10 @@ public class TripController {
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<String> updateTrip(Authentication auth, @PathVariable Integer id, @RequestBody TripDTO tripDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        if (tripDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
+        User user = userService.getCurrent(auth);
 
         try {
             User.isBlocked(user);
@@ -80,7 +82,12 @@ public class TripController {
         }
 
         Trip tripToUpdate = mapper.toEntity(tripDTO);
-        tripService.update(trip, tripToUpdate);
+
+        try {
+            tripService.update(trip, tripToUpdate);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
 
         LOG.debug("Updated trip {}.", tripDTO);
         return new ResponseEntity<>("Trip was successfully edited.", HttpStatus.OK);
@@ -89,8 +96,10 @@ public class TripController {
     @PreAuthorize("!anonymous")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createTrip(Authentication auth, @RequestBody TripDTO tripDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        if (tripDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
+        User user = userService.getCurrent(auth);
         Trip trip = mapper.toEntity(tripDTO);
 
         try {
@@ -118,12 +127,11 @@ public class TripController {
     @PreAuthorize("!anonymous")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> deleteTrip(Authentication auth, @PathVariable Integer id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        User user = userService.getCurrent(auth);
 
         try {
             User.isBlocked(user);
-            Trip trip = getTripByID(id);
+            Trip trip = getTrip(id);
 
             if (user.getRole() != Role.ADMIN && !trip.getAuthor().getId().equals(user.getId())) {
                 return new ResponseEntity<>("Cannot delete trip of another user.", HttpStatus.FORBIDDEN);
@@ -134,7 +142,7 @@ public class TripController {
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (AccessDeniedException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
@@ -173,7 +181,7 @@ public class TripController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/capacity/{capacity}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<TripDTO> getAllActiveTripsByCapacity(@PathVariable int capacity) {
+    public List<TripDTO> getAllActiveTripsByCapacity(@PathVariable Integer capacity) {
         LOG.info("Retrieving all active trips by capacity.");
         return tripService.findAllActiveTrips()
                 .stream()
@@ -197,9 +205,7 @@ public class TripController {
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TripDTO> getCurrentUserTrips(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+        User user = userService.getCurrent(auth);
         return user.getTrips()
                 .stream()
                 .map(mapper::toDto)
@@ -208,11 +214,9 @@ public class TripController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public TripDTO getTripByID(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-
+    public TripDTO getTripByID(@PathVariable Integer id) {
         try {
-            Trip trip = getTripByID(id);
+            Trip trip = getTrip(id);
             return mapper.toDto(trip);
         } catch (NotFoundException e) {
             return null;
@@ -221,14 +225,16 @@ public class TripController {
 
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addComment(Authentication auth, @PathVariable int tripID, @RequestBody CommentDTO commentDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+    public ResponseEntity<String> addComment(Authentication auth, @PathVariable Integer tripID, @RequestBody CommentDTO commentDTO) {
+        if (commentDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userService.getCurrent(auth);
 
         try {
             User.isBlocked(user);
-            Trip trip = getTripByID(tripID);
+            Trip trip = getTrip(tripID);
             Comment comment = mapper.toEntity(commentDTO);
 
             tripService.addComment(trip, comment);
@@ -238,12 +244,12 @@ public class TripController {
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (AccessDeniedException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
 
-    private Trip getTripByID(int id) {
+    private Trip getTrip(int id) {
         Trip trip = tripService.findByID(id);
         if (trip == null) {
             throw NotFoundException.create("Trip", id);

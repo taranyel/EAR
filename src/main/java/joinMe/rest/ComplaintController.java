@@ -43,9 +43,11 @@ public class ComplaintController {
     @PreAuthorize("!anonymous")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createComplaint(Authentication auth, @RequestBody ComplaintDTO complaintDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+        if (complaintDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userService.getCurrent(auth);
         Complaint complaint = mapper.toEntity(complaintDTO);
 
         try {
@@ -66,8 +68,7 @@ public class ComplaintController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> deleteComplaint(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        User user = userService.getCurrent(auth);
 
         Complaint complaint = complaintService.findByID(id);
         if (complaint == null) {
@@ -89,9 +90,7 @@ public class ComplaintController {
     @PreAuthorize("!anonymous")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ComplaintDTO> getComplaintsToCurrentUser(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+        User user = userService.getCurrent(auth);
         return user.getComplaints()
                 .stream()
                 .map(mapper::toDto)

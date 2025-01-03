@@ -2,7 +2,9 @@ package joinMe.service;
 
 import joinMe.db.dao.*;
 import joinMe.db.entity.*;
+import joinMe.security.model.UserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -199,5 +201,11 @@ public class UserService {
     public void setAdmin(User user) {
         user.setRole(Role.ADMIN);
         userDao.update(user);
+    }
+
+    public User getCurrent(Authentication auth) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        return findByID(userId);
     }
 }

@@ -42,24 +42,15 @@ public class AddressController {
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<String> changeAddress(Authentication auth, @RequestBody AddressDTO addressDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+        if (addressDTO == null) {
+            return new ResponseEntity<>("Data is missing", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userService.getCurrent(auth);
 
         Address address = mapper.toEntity(addressDTO);
-        Address existingAddress = addressService.findByAll(address);
-
         user.getAddress().removeResident(user);
-
-        if (existingAddress == null) {
-            address.addResident(user);
-            addressService.persist(address);
-            user.setAddress(address);
-        } else {
-            existingAddress.addResident(user);
-            addressService.update(existingAddress);
-            user.setAddress(existingAddress);
-        }
+        addressService.setAddress(address, user);
 
         userService.update(user);
 
@@ -79,10 +70,7 @@ public class AddressController {
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public AddressDTO getCurrentAddress(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
-
+        User user = userService.getCurrent(auth);
         LOG.info("Retrieving current address.");
         return mapper.toDto(user.getAddress());
     }

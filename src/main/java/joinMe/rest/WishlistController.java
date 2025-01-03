@@ -46,9 +46,7 @@ public class WishlistController {
     @PreAuthorize("!anonymous")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> createWishlist(Authentication auth, @RequestBody TripDTO tripDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-
+        User user = userService.getCurrent(auth);
         Trip trip = mapper.toEntity(tripDTO);
         Wishlist wishlist = wishlistService.create(user, trip);
         userService.addWishlist(user, wishlist);
@@ -61,9 +59,7 @@ public class WishlistController {
     @PreAuthorize("!anonymous")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> deleteWishlist(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-
+        User user = userService.getCurrent(auth);
         try {
             Wishlist wishlist = getWishlist(id, user);
             userService.removeWishlist(user, wishlist);
@@ -71,7 +67,7 @@ public class WishlistController {
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (AccessDeniedException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
@@ -79,9 +75,7 @@ public class WishlistController {
     @PreAuthorize("!anonymous")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TripDTO> getAllWishlists(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-
+        User user = userService.getCurrent(auth);
         return user.getWishlists().stream()
                 .map(Wishlist::getTrip)
                 .toList()
@@ -93,9 +87,7 @@ public class WishlistController {
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public TripDTO getWishlist(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-
+        User user = userService.getCurrent(auth);
         try {
             return mapper.toDto(getWishlist(id, user).getTrip());
         } catch (Exception e) {
@@ -112,7 +104,6 @@ public class WishlistController {
         if (!wishlist.getOwner().getId().equals(user.getId())) {
             throw new AccessDeniedException("Cannot access wishlist of another user.");
         }
-
         return wishlist;
     }
 }
