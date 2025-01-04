@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @NamedQueries({
-        @NamedQuery(name = "Complaint.findByAccused", query = "SELECT c FROM Complaint c WHERE c.accused = :accused")
+        @NamedQuery(name = "Complaint.findByAccused", query = "SELECT c FROM Complaint c WHERE c.accused = :accused  ORDER BY c.time DESC")
 })
 public class Complaint extends AbstractEntity {
 
@@ -31,4 +31,13 @@ public class Complaint extends AbstractEntity {
     @Basic(optional = false)
     @Column(name = "time", nullable = false)
     private LocalDateTime time;
+
+    @Override
+    public String toString() {
+        return "Complaint{" +
+                "\n accused=" + accused +
+                ",\n description='" + description + '\'' +
+                ",\n time=" + time +
+                "\n}";
+    }
 }

@@ -22,4 +22,12 @@ public class Wishlist extends AbstractEntity {
     @ManyToOne
     @JoinColumn
     private Trip trip;
+
+    @Override
+    public String toString() {
+        return "Wishlist{" +
+                "\n owner=" + owner +
+                ",\n trip=" + trip +
+                "\n}";
+    }
 }

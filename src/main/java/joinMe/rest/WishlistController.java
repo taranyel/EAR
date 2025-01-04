@@ -62,7 +62,7 @@ public class WishlistController {
 
         LOG.debug("Created wishlist {}.", wishlist);
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", trip.getId());
-        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+        return new ResponseEntity<>(wishlist.toString(), headers, HttpStatus.CREATED);
     }
 
     @PreAuthorize("!anonymous")
@@ -72,7 +72,7 @@ public class WishlistController {
         try {
             Wishlist wishlist = getWishlist(id, user);
             userService.removeWishlist(user, wishlist);
-            return new ResponseEntity<>("Wishlist was successfully removed.", HttpStatus.OK);
+            return new ResponseEntity<>("Wishlist with id: " + id + " was successfully removed.", HttpStatus.OK);
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

@@ -57,7 +57,7 @@ public class UserController {
         userService.persist(user);
         LOG.info("User \"{}\" successfully registered.", user.getUsername());
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
-        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+        return new ResponseEntity<>(user.toString(), headers, HttpStatus.CREATED);
     }
 
     @PreAuthorize("!anonymous")
@@ -77,7 +77,7 @@ public class UserController {
 
         userService.update(user, userToUpdate);
         LOG.info("User \"{}\" was successfully updated.", userToUpdate.getUsername());
-        return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
+        return new ResponseEntity<>(user.toString(), HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
@@ -111,7 +111,7 @@ public class UserController {
         Rating rating = mapper.toEntity(ratingDTO);
         userService.addRating(user, rating);
 
-        return new ResponseEntity<>("User was rated.", HttpStatus.OK);
+        return new ResponseEntity<>(user.toString(), HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -124,7 +124,7 @@ public class UserController {
         }
         userService.remove(user);
         LOG.info("User \"{}\" was successfully deleted.", user.getUsername());
-        return new ResponseEntity<>("User was successfully deleted.", HttpStatus.OK);
+        return new ResponseEntity<>("User with id: " + id + " was successfully deleted.", HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -137,7 +137,7 @@ public class UserController {
         }
         userService.setAdmin(user);
         LOG.info("New admin was successfully set.");
-        return new ResponseEntity<>("New admin was successfully set.", HttpStatus.OK);
+        return new ResponseEntity<>("User with id: " + id + " is new admin now.", HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -146,11 +146,11 @@ public class UserController {
         User user = userService.findByID(id);
         if (user == null) {
             LOG.warn("User with id: {} was not found.", id);
-            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("User with id: " + id + " was not found.", HttpStatus.NOT_FOUND);
         }
         userService.blockUser(user);
         LOG.info("User \"{}\" was blocked.", user.getUsername());
-        return new ResponseEntity<>("User was blocked", HttpStatus.OK);
+        return new ResponseEntity<>("User with id: " + id + " was blocked.", HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -160,10 +160,10 @@ public class UserController {
 
         if (user == null) {
             LOG.warn("User with id: {} was not found.", id);
-            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("User with id: " + id + " was not found.", HttpStatus.NOT_FOUND);
         }
         userService.unblockUser(user);
         LOG.info("User \"{}\" was unblocked.", user.getUsername());
-        return new ResponseEntity<>("User was unblocked", HttpStatus.OK);
+        return new ResponseEntity<>("User with id: " + id + " was unblocked.", HttpStatus.OK);
     }
 }

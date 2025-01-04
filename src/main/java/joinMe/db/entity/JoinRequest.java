@@ -31,4 +31,13 @@ public class JoinRequest extends AbstractEntity {
     @Column(name = "status")
     @Builder.Default
     private RequestStatus status = Constants.DEFAULT_REQUEST_STATUS;
+
+    @Override
+    public String toString() {
+        return "JoinRequest{" +
+                "\n requester=" + requester +
+                ",\n trip=" + trip +
+                ",\n status=" + status +
+                "\n}";
+    }
 }

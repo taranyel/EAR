@@ -71,7 +71,8 @@ public class AttendlistController {
         if (trip == null) {
             return null;
         }
-        return attendlistService.findAllMessagesByTrip(trip)
+
+        return messageService.findByTrip(trip)
                 .stream()
                 .map(mapper::toDto)
                 .toList();
@@ -117,7 +118,8 @@ public class AttendlistController {
 
             attendlistService.addMessage(attendlist, message);
             LOG.debug("Added message {}.", messageDTO);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            return new ResponseEntity<>(attendlist.toString(), HttpStatus.CREATED);
+
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
@@ -140,7 +142,7 @@ public class AttendlistController {
 
         Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, message.getAuthor());
         attendlistService.removeMessage(attendlist, message);
-        return new ResponseEntity<>("Message was successfully deleted.", HttpStatus.OK);
+        return new ResponseEntity<>("Message with id: " + messageID + " was successfully deleted.", HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
@@ -173,7 +175,7 @@ public class AttendlistController {
             userService.leaveAttendlist(toLeave, attendlist);
             tripService.removeAttendlist(trip, attendlist);
 
-            return new ResponseEntity<>("User with id: " + userID + " has leaved trip with id: " + tripID, HttpStatus.OK);
+            return new ResponseEntity<>(trip.toString(), HttpStatus.OK);
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

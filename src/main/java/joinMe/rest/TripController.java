@@ -90,7 +90,7 @@ public class TripController {
         }
 
         LOG.debug("Updated trip {}.", tripDTO);
-        return new ResponseEntity<>("Trip was successfully edited.", HttpStatus.OK);
+        return new ResponseEntity<>(trip.toString(), HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
@@ -113,7 +113,7 @@ public class TripController {
             LOG.debug("Created attendlist {}.", attendlist);
 
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", trip.getId());
-            return new ResponseEntity<>(headers, HttpStatus.CREATED);
+            return new ResponseEntity<>(trip.toString(), headers, HttpStatus.CREATED);
 
         } catch (AccessDeniedException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
@@ -136,12 +136,12 @@ public class TripController {
             }
             userService.removeTrip(user, trip);
             tripService.remove(trip);
-            return new ResponseEntity<>("Trip was successfully deleted.", HttpStatus.OK);
+            return new ResponseEntity<>("Trip with id: " + id + " was successfully deleted.", HttpStatus.OK);
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -238,7 +238,7 @@ public class TripController {
             comment.setAuthor(user);
             tripService.addComment(trip, comment);
             LOG.debug("Added comment {}.", comment);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            return new ResponseEntity<>(trip.toString(), HttpStatus.CREATED);
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -261,7 +261,7 @@ public class TripController {
         }
 
         tripService.removeComment(trip, comment);
-        return new ResponseEntity<>("Comment was successfully deleted.", HttpStatus.OK);
+        return new ResponseEntity<>("Comment with id: " + commentID + " was successfully deleted.", HttpStatus.OK);
     }
 
 

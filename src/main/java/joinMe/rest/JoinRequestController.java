@@ -64,7 +64,7 @@ public class JoinRequestController {
             userService.addJoinRequest(joinRequest);
 
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", joinRequest.getId());
-            return new ResponseEntity<>(headers, HttpStatus.CREATED);
+            return new ResponseEntity<>(joinRequest.toString(), headers, HttpStatus.CREATED);
 
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
@@ -105,7 +105,7 @@ public class JoinRequestController {
             User.isBlocked(user);
             JoinRequest joinRequest = getJoinRequestForRequester(user, id);
             userService.cancelJoinRequest(user, joinRequest);
-            return new ResponseEntity<>("Join request was canceled.", HttpStatus.OK);
+            return new ResponseEntity<>("Join request with id: " + id + " was canceled.", HttpStatus.OK);
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

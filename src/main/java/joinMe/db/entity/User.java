@@ -175,4 +175,18 @@ public class User extends AbstractEntity {
         }
         return sum / ratings.size();
     }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "\n address=" + address +
+                ",\n firstName='" + firstName + '\'' +
+                ",\n lastName='" + lastName + '\'' +
+                ",\n username='" + username + '\'' +
+                ",\n email='" + email + '\'' +
+                ",\n status=" + status +
+                ",\n birthdate=" + birthdate +
+                ",\n ratings=" + ratings +
+                "\n}";
+    }
 }

@@ -1,12 +1,10 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,7 +22,8 @@ import java.util.Objects;
 public class Attendlist extends AbstractEntity{
 
     @OneToMany(mappedBy = "attendlist", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<Message> messages;
+    @Builder.Default
+    private List<Message> messages = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -46,5 +45,13 @@ public class Attendlist extends AbstractEntity{
 
     public User getAdmin() {
         return trip.getAuthor();
+    }
+
+    @Override
+    public String toString() {
+        return "Attendlist{" +
+                "\n joiner=" + joiner +
+                ",\n messages=" + messages +
+                "\n}";
     }
 }

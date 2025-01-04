@@ -179,23 +179,22 @@
 
     <developers>
         <developer>
-            <name>Martin Ledvinka</name>
-            <email>martin.ledvinka@fel.cvut.cz</email>
-            <organization>Czech Technical University in Prague, Knowledge Based and Software Systems Group
-            </organization>
-            <organizationUrl>https://kbss.felk.cvut.cz</organizationUrl>
-            <roles>
-            </roles>
+            <name>Yelyzaveta Taranova</name>
+            <email>taranyel@fel.cvut.cz</email>
+        </developer>
+        <developer>
+            <name>Kyrylo Shpakov</name>
+            <email>shpakkyr@fel.cvut.cz</email>
         </developer>
     </developers>
 
     <organization>
-        <name>Czech Technical University in Prague, Knowledge Based and Software Systems Group</name>
+        <name>Czech Technical University in Prague</name>
         <url>https://kbss.felk.cvut.cz</url>
     </organization>
 
     <scm>
-        <connection>scm:git:https://gitlab.fel.cvut.cz/ear/e-shop.git</connection>
+        <connection>scm:git:https://gitlab.fel.cvut.cz/taranyel/ear-semestral-work.git</connection>
     </scm>
 
 </project>

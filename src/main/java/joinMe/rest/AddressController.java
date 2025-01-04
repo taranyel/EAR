@@ -54,7 +54,7 @@ public class AddressController {
 
         userService.update(user);
 
-        return new ResponseEntity<>("Address was successfully changed.", HttpStatus.OK);
+        return new ResponseEntity<>(user.toString(), HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
@@ -80,11 +80,9 @@ public class AddressController {
     public List<UserDTO> getAllResidents(@PathVariable Integer addressID) {
         LOG.info("Retrieving all residents.");
         Address address = addressService.findByID(addressID);
-
         if (address == null) {
             return null;
         }
-
         return address.getResidents()
                 .stream()
                 .map(mapper::toDto)

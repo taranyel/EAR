@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @NamedQueries({
-        @NamedQuery(name = "Comment.findByTrip", query = "SELECT c FROM Comment c WHERE c.trip = :trip")
+        @NamedQuery(name = "Comment.findByTrip", query = "SELECT c FROM Comment c WHERE c.trip = :trip ORDER BY c.time DESC")
 })
 public class Comment extends AbstractEntity {
 
@@ -35,4 +35,13 @@ public class Comment extends AbstractEntity {
     @Basic(optional = false)
     @Column(name = "time", nullable = false)
     private LocalDateTime time;
+
+    @Override
+    public String toString() {
+        return "Comment{" +
+                "\n author=" + author +
+                ",\n text='" + text + '\'' +
+                ",\n time=" + time +
+                "\n}";
+    }
 }

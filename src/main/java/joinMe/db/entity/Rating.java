@@ -26,4 +26,12 @@ public class Rating extends AbstractEntity {
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn
     private User owner;
+
+    @Override
+    public String toString() {
+        return "Rating{" +
+                "\n comment='" + comment + '\'' +
+                ",\n rating=" + rating +
+                "\n}";
+    }
 }

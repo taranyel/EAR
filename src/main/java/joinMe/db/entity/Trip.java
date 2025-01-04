@@ -18,12 +18,12 @@ import java.util.Objects;
 @AllArgsConstructor
 @SuperBuilder
 @NamedQueries({
-        @NamedQuery(name = "Trip.findByStatus", query = "SELECT t FROM Trip t WHERE t.status = :status"),
-        @NamedQuery(name = "Trip.findByAuthor", query = "SELECT t FROM Trip t WHERE t.author = :author"),
-        @NamedQuery(name = "Trip.findByCountry", query = "SELECT t FROM Trip t WHERE t.country = :country"),
-        @NamedQuery(name = "Trip.findByStartDate", query = "SELECT t FROM Trip t WHERE t.startDate = :startDate"),
-        @NamedQuery(name = "Trip.findByEndDate", query = "SELECT t FROM Trip t WHERE t.endDate = :endDate"),
-        @NamedQuery(name = "Trip.findByCapacity", query = "SELECT t FROM Trip t WHERE t.capacity = :capacity"),
+        @NamedQuery(name = "Trip.findByStatus", query = "SELECT t FROM Trip t WHERE t.status = :status ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByAuthor", query = "SELECT t FROM Trip t WHERE t.author = :author ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByCountry", query = "SELECT t FROM Trip t WHERE t.country = :country ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByStartDate", query = "SELECT t FROM Trip t WHERE t.startDate = :startDate ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByEndDate", query = "SELECT t FROM Trip t WHERE t.endDate = :endDate ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByCapacity", query = "SELECT t FROM Trip t WHERE t.capacity = :capacity ORDER BY t.created"),
 })
 public class Trip extends AbstractEntity {
 
@@ -100,5 +100,23 @@ public class Trip extends AbstractEntity {
     public void removeAttendlist(Attendlist attendlist) {
         Objects.requireNonNull(attendlist);
         attendlists.remove(attendlist);
+    }
+
+    @Override
+    public String toString() {
+        return "Trip{" +
+                "\n attendlists=" + attendlists +
+                ",\n status=" + status +
+                ",\n title='" + title + '\'' +
+                ",\n description='" + description + '\'' +
+                ",\n imagePath='" + imagePath + '\'' +
+                ",\n country='" + country + '\'' +
+                ",\n capacity=" + capacity +
+                ",\n startDate=" + startDate +
+                ",\n endDate=" + endDate +
+                ",\n created=" + created +
+                ",\n author=" + author +
+                ",\n comments=" + comments +
+                "\n}";
     }
 }

@@ -2,7 +2,6 @@ package joinMe.db.dao;
 
 import jakarta.persistence.NoResultException;
 import joinMe.db.entity.Attendlist;
-import joinMe.db.entity.Message;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
 import org.springframework.stereotype.Repository;
@@ -19,21 +18,6 @@ public class AttendlistDao extends BaseDao<Attendlist> {
         try {
             return em.createNamedQuery("Attendlist.findByTripAndJoiner", Attendlist.class)
                     .setParameter("trip", trip).setParameter("joiner", joiner).getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
-
-    public List<Message> findAllMessagesByTrip(Trip trip) {
-        try {
-            return em.createNamedQuery("Attendlist.findByTrip", Attendlist.class)
-                    .setParameter("trip", trip)
-                    .getResultList()
-                    .stream()
-                    .flatMap(attendlist -> attendlist.getMessages()
-                            .stream())
-                    .toList();
-
         } catch (NoResultException e) {
             return null;
         }

@@ -55,4 +55,15 @@ public abstract class Address extends AbstractEntity {
         Objects.requireNonNull(resident);
         residents.remove(resident);
     }
+
+    @Override
+    public String toString() {
+        return "Address{" +
+                "\n city='" + city + '\'' +
+                ",\n street='" + street + '\'' +
+                ",\n number='" + number + '\'' +
+                ",\n postIndex='" + postIndex + '\'' +
+                ",\n country='" + country + '\'' +
+                "\n}";
+    }
 }

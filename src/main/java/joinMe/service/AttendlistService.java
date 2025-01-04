@@ -73,11 +73,6 @@ public class AttendlistService {
         return attendlistDao.findByTripAndJoiner(trip, joiner);
     }
 
-    public List<Message> findAllMessagesByTrip(Trip trip) {
-        Objects.requireNonNull(trip);
-        return attendlistDao.findAllMessagesByTrip(trip);
-    }
-
     public List<Attendlist> findByJoiner(User user) {
         Objects.requireNonNull(user);
         return attendlistDao.findByJoiner(user);

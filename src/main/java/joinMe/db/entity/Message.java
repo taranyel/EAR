@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NamedQueries({
         @NamedQuery(name = "Message.findByAuthor", query = "SELECT m FROM Message m WHERE m.author = :author"),
+        @NamedQuery(name = "Message.findByTrip", query = "SELECT m FROM Message m LEFT JOIN Attendlist a WHERE a.trip = :trip ORDER BY m.time DESC")
 })
 public class Message extends AbstractEntity {
 
@@ -35,4 +36,13 @@ public class Message extends AbstractEntity {
     @ManyToOne
     @JoinColumn(nullable = false)
     private User author;
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "\n text='" + text + '\'' +
+                ",\n time=" + time +
+                ",\n author=" + author +
+                "\n}";
+    }
 }
