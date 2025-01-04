@@ -2,12 +2,10 @@ package joinMe.rest.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import joinMe.db.entity.AccountStatus;
 import joinMe.db.entity.Role;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,7 +24,7 @@ public class UserDTO {
     @Email(message = "Invalid email format")
     private String email;
     private Role role;
-    @NotBlank(message = "Birth date must not be blank")
+    @NotNull(message = "Birth date must not be blank")
     private LocalDate birthDate;
     @NotBlank(message = "Username must not be blank")
     private String username;

@@ -45,8 +45,7 @@ public class UserController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> register(@Valid @RequestBody RegisterDTO registerDTO) {
-        if (registerDTO.getUser() == null || registerDTO.getAddress() == null) {
-            LOG.warn("Data is missing.");
+        if (registerDTO == null) {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
 
@@ -55,14 +54,10 @@ public class UserController {
         Address address = mapper.toEntity(registerDTO.getAddress());
         addressService.setAddress(address, user);
 
-        try {
-            userService.persist(user);
-            LOG.info("User \"{}\" successfully registered.", user.getUsername());
-            final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
-            return new ResponseEntity<>(headers, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        userService.persist(user);
+        LOG.info("User \"{}\" successfully registered.", user.getUsername());
+        final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
     @PreAuthorize("!anonymous")
@@ -80,14 +75,9 @@ public class UserController {
             return new ResponseEntity<>("Cannot change data of another user.", HttpStatus.FORBIDDEN);
         }
 
-        try {
-            userService.update(user, userToUpdate);
-            LOG.info("User \"{}\" was successfully updated.", userToUpdate.getUsername());
-            return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        userService.update(user, userToUpdate);
+        LOG.info("User \"{}\" was successfully updated.", userToUpdate.getUsername());
+        return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
@@ -110,7 +100,7 @@ public class UserController {
 
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> rateUser(@PathVariable Integer id, @RequestBody RatingDTO ratingDTO) {
+    public ResponseEntity<String> rateUser(@PathVariable Integer id, @Valid @RequestBody RatingDTO ratingDTO) {
         User user = userService.findByID(id);
 
         if (user == null) {

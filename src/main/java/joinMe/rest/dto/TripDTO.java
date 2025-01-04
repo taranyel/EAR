@@ -1,6 +1,7 @@
 package joinMe.rest.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import joinMe.db.entity.TripStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,9 +27,9 @@ public class TripDTO {
     private Integer capacity;
     @NotBlank(message = "Country must not be blank")
     private String country;
-    @NotBlank(message = "Start date must not be blank")
+    @NotNull(message = "Start date must not be blank")
     private LocalDate startDate;
-    @NotBlank(message = "End date must not be blank")
+    @NotNull(message = "End date must not be blank")
     private LocalDate endDate;
     @NotBlank(message = "Image path must not be blank")
     private String imagePath;
