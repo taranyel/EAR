@@ -18,7 +18,8 @@ import java.util.Objects;
 @AllArgsConstructor
 @NamedQueries({
         @NamedQuery(name = "Attendlist.findByTripAndJoiner", query = "SELECT a FROM Attendlist a WHERE a.trip = :trip AND a.joiner = :joiner"),
-        @NamedQuery(name = "Attendlist.findByJoiner", query = "SELECT a FROM Attendlist a WHERE a.joiner = :joiner")
+        @NamedQuery(name = "Attendlist.findByJoiner", query = "SELECT a FROM Attendlist a WHERE a.joiner = :joiner"),
+        @NamedQuery(name = "Attendlist.findByTrip", query = "SELECT a FROM Attendlist a WHERE a.trip = :trip")
 })
 public class Attendlist extends AbstractEntity{
 

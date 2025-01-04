@@ -2,6 +2,7 @@ package joinMe.service;
 
 import jakarta.transaction.Transactional;
 import joinMe.db.dao.AttendlistDao;
+import joinMe.db.dao.JoinRequestDao;
 import joinMe.db.dao.TripDao;
 import joinMe.db.dao.UserDao;
 import joinMe.db.entity.*;
@@ -23,11 +24,14 @@ public class TripService {
 
     private final AttendlistDao attendlistDao;
 
+    private final JoinRequestDao joinRequestDao;
+
     @Autowired
-    public TripService(TripDao tripDao, UserDao userDao, AttendlistDao attendlistDao) {
+    public TripService(TripDao tripDao, UserDao userDao, AttendlistDao attendlistDao, JoinRequestDao joinRequestDao) {
         this.tripDao = tripDao;
         this.userDao = userDao;
         this.attendlistDao = attendlistDao;
+        this.joinRequestDao = joinRequestDao;
     }
 
     public void update(Trip current, Trip newTrip) {
@@ -53,11 +57,16 @@ public class TripService {
     public void remove(Trip trip) {
         Objects.requireNonNull(trip);
 
-        List<User> joiners = userDao.getAllJoinersOfAttendlistByTrip(trip);
-        for (User joiner : joiners) {
-            Attendlist attendlist = attendlistDao.findByTripAndJoiner(trip, joiner);
-            joiner.removeAttendlist(attendlist);
-            userDao.update(joiner);
+        List<Attendlist> attendlists = attendlistDao.findByTrip(trip);
+        for (Attendlist attendlist : attendlists) {
+            attendlist.getJoiner().removeAttendlist(attendlist);
+            userDao.update(attendlist.getJoiner());
+        }
+
+        List<JoinRequest> joinRequests = joinRequestDao.findByTrip(trip);
+        for (JoinRequest joinRequest : joinRequests) {
+            joinRequest.getRequester().removeJoinRequest(joinRequest);
+            userDao.update(joinRequest.getRequester());
         }
 
         tripDao.remove(trip);
@@ -68,6 +77,13 @@ public class TripService {
         Objects.requireNonNull(comment);
         trip.addComment(comment);
         comment.setTrip(trip);
+        tripDao.update(trip);
+    }
+
+    public void removeAttendlist(Trip trip, Attendlist attendlist) {
+        Objects.requireNonNull(trip);
+        Objects.requireNonNull(attendlist);
+        trip.removeAttendlist(attendlist);
         tripDao.update(trip);
     }
 

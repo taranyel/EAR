@@ -26,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/attendlists")
@@ -57,7 +58,6 @@ public class AttendlistController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<AttendlistDTO> getCurrentUserAttendLists(Authentication auth) {
         User user = userService.getCurrent(auth);
-
         return attendlistService.findByJoiner(user)
                 .stream()
                 .map(mapper::toDto)
@@ -68,11 +68,9 @@ public class AttendlistController {
     @GetMapping(value = "/{tripID}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<MessageDTO> getAttendList(@PathVariable Integer tripID) {
         Trip trip = tripService.findByID(tripID);
-
         if (trip == null) {
             return null;
         }
-
         return attendlistService.findAllMessagesByTrip(trip)
                 .stream()
                 .map(mapper::toDto)
@@ -84,6 +82,9 @@ public class AttendlistController {
     public List<UserDTO> getAllJoinersOfTrip(Authentication auth, @PathVariable Integer tripID) {
         assert auth.getPrincipal() instanceof UserDetails;
         Trip trip = tripService.findByID(tripID);
+        if (trip == null) {
+            return null;
+        }
         return userService.getAllJoinersOfTrip(trip)
                 .stream()
                 .map(mapper::toDto)
@@ -143,14 +144,36 @@ public class AttendlistController {
     }
 
     @PreAuthorize("!anonymous")
-    @DeleteMapping(value = "/{id}")
-    public ResponseEntity<String> leaveAttendlist(Authentication auth, @PathVariable int id) {
-        User user = userService.getCurrent(auth);
+    @DeleteMapping(value = "/leave/{tripID}/{userID}")
+    public ResponseEntity<String> leaveAttendlist(Authentication auth, @PathVariable Integer tripID, @PathVariable Integer userID) {
+        User currentUser = userService.getCurrent(auth);
+        User toLeave = userService.findByID(userID);
+        Trip trip = tripService.findByID(tripID);
+
+        if (trip == null) {
+            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
+        }
+
+        if (toLeave == null) {
+            return new ResponseEntity<>("User with id: " + userID + " was not found.", HttpStatus.NOT_FOUND);
+        }
+
+        if (!Objects.equals(currentUser.getId(), toLeave.getId()) && !Objects.equals(currentUser.getId(), trip.getAuthor().getId())) {
+            return new ResponseEntity<>("To remove other user from chat you need to be admin of this chat.", HttpStatus.FORBIDDEN);
+        } else if (currentUser.getId().equals(toLeave.getId()) && Objects.equals(trip.getAuthor().getId(), currentUser.getId())) {
+            return new ResponseEntity<>("Admin cannot leave chat.", HttpStatus.FORBIDDEN);
+        }
 
         try {
-            Attendlist attendlist = getAttendlist(user, id);
-            userService.leaveAttendlist(user, attendlist);
-            return new ResponseEntity<>("Attend list has been leaved.", HttpStatus.OK);
+            Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, toLeave);
+            if (attendlist == null) {
+                return new ResponseEntity<>("User with id: " + userID + " is not joiner of trip with id: " + tripID, HttpStatus.BAD_REQUEST);
+            }
+
+            userService.leaveAttendlist(toLeave, attendlist);
+            tripService.removeAttendlist(trip, attendlist);
+
+            return new ResponseEntity<>("User with id: " + userID + " has leaved trip with id: " + tripID, HttpStatus.OK);
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

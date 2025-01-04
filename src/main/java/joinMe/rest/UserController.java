@@ -101,7 +101,6 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable Integer id) {
         User user = userService.findByID(id);
-
         if (user == null) {
             LOG.warn("User with id: {} was not found.", id);
             return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
@@ -115,7 +114,6 @@ public class UserController {
     @GetMapping("/{id}/admin")
     public ResponseEntity<String> makeAdmin(@PathVariable Integer id) {
         User user = userService.findByID(id);
-
         if (user == null) {
             LOG.warn("User with id: {} was not found.", id);
             return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
@@ -129,7 +127,6 @@ public class UserController {
     @GetMapping("/{id}/block")
     public ResponseEntity<String> blockUser(@PathVariable Integer id) {
         User user = userService.findByID(id);
-
         if (user == null) {
             LOG.warn("User with id: {} was not found.", id);
             return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);

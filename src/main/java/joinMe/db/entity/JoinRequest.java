@@ -13,8 +13,9 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NamedQueries({
         @NamedQuery(name = "JoinRequest.findByRequester", query = "SELECT j FROM JoinRequest j WHERE j.requester = :requester"),
+        @NamedQuery(name = "JoinRequest.findByTrip", query = "SELECT j FROM JoinRequest j WHERE j.trip = :trip"),
         @NamedQuery(name = "JoinRequest.findByRequesterAndTrip", query = "SELECT j FROM JoinRequest j WHERE j.requester = :requester AND j.trip = :trip"),
-        @NamedQuery(name = "JoinRequest.getJoinRequestsForApproval", query = "SELECT j FROM JoinRequest j LEFT JOIN Trip t ON j.trip = t WHERE t.author = :author")
+        @NamedQuery(name = "JoinRequest.getJoinRequestsForApproval", query = "SELECT j FROM JoinRequest j LEFT JOIN Trip t ON j.trip = t WHERE t.author = :author AND j.status = 'IN_PROGRESS'")
 })
 public class JoinRequest extends AbstractEntity {
 

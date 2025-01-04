@@ -47,4 +47,13 @@ public class AttendlistDao extends BaseDao<Attendlist> {
             return null;
         }
     }
+
+    public List<Attendlist> findByTrip(Trip trip) {
+        try {
+            return em.createNamedQuery("Attendlist.findByTrip", Attendlist.class).setParameter("trip", trip)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }
