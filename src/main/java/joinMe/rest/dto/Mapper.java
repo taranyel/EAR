@@ -78,9 +78,9 @@ public class Mapper {
     public CommentDTO toDto(Comment comment) {
         return CommentDTO.builder()
                 .id(comment.getId())
-                .author(toDto(comment.getAuthor()))
+                .authorUsername(comment.getAuthor().getUsername())
                 .text(comment.getText())
-                .trip(toDto(comment.getTrip()))
+                .time(comment.getTime())
                 .build();
     }
 
@@ -89,6 +89,7 @@ public class Mapper {
                 .id(complaint.getId())
                 .accused(toDto(complaint.getAccused()))
                 .description(complaint.getDescription())
+                .time(complaint.getTime())
                 .build();
     }
 
@@ -104,7 +105,7 @@ public class Mapper {
     public MessageDTO toDto(Message message) {
         return MessageDTO.builder()
                 .id(message.getId())
-                .author(toDto(message.getAuthor()))
+                .authorUsername(message.getAuthor().getUsername())
                 .text(message.getText())
                 .time(message.getTime())
                 .build();
@@ -135,14 +136,11 @@ public class Mapper {
     public User toEntity(UserDTO userDTO) {
         return User.builder()
                 .id(userDTO.getId())
-                .status(userDTO.getStatus())
-                .rating(userDTO.getRating())
                 .birthdate(userDTO.getBirthDate())
                 .firstName(userDTO.getFirstName())
                 .email(userDTO.getEmail())
                 .imagePath(userDTO.getImagePath())
                 .lastName(userDTO.getLastName())
-                .rating(userDTO.getRating())
                 .username(userDTO.getUsername())
                 .password(userDTO.getPassword())
                 .build();
@@ -176,19 +174,30 @@ public class Mapper {
     }
 
     public Comment toEntity(CommentDTO commentDTO) {
+        LocalDateTime time = LocalDateTime.now();
+
+        if (commentDTO.getTime() != null) {
+            time = commentDTO.getTime();
+        }
+
         return Comment.builder()
                 .id(commentDTO.getId())
                 .text(commentDTO.getText())
-                .trip(toEntity(commentDTO.getTrip()))
-                .author(toEntity(commentDTO.getAuthor()))
+                .time(time)
                 .build();
     }
 
     public Complaint toEntity(ComplaintDTO complaintDTO) {
+        LocalDateTime time = LocalDateTime.now();
+
+        if (complaintDTO.getTime() != null) {
+            time = complaintDTO.getTime();
+        }
+
         return Complaint.builder()
                 .id(complaintDTO.getId())
-                .accused(toEntity(complaintDTO.getAccused()))
                 .description(complaintDTO.getDescription())
+                .time(time)
                 .build();
     }
 }

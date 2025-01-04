@@ -4,12 +4,10 @@ import joinMe.db.entity.JoinRequest;
 import joinMe.db.entity.Role;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
-import joinMe.db.exception.JoinRequestException;
 import joinMe.db.exception.NotFoundException;
 import joinMe.rest.dto.JoinRequestDTO;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.util.RestUtils;
-import joinMe.security.model.UserDetails;
 import joinMe.service.JoinRequestService;
 import joinMe.service.TripService;
 import joinMe.service.UserService;
@@ -121,7 +119,7 @@ public class JoinRequestController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<JoinRequestDTO> getAllJoinRequests(Authentication auth) {
         User user = userService.getCurrent(auth);
-        return user.getJoinRequests()
+        return joinRequestService.findByRequester(user)
                 .stream()
                 .map(mapper::toDto)
                 .toList();

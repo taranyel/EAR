@@ -8,6 +8,7 @@ import joinMe.db.entity.Wishlist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -33,13 +34,14 @@ public class WishlistService {
     public Wishlist create(User user, Trip trip) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
-
-        Wishlist wishlist = Wishlist.builder()
+        return Wishlist.builder()
                 .owner(user)
                 .trip(trip)
                 .build();
+    }
 
-        dao.persist(wishlist);
-        return wishlist;
+    public List<Trip> findWishlistByOwner(User user) {
+        Objects.requireNonNull(user);
+        return dao.findTripsByOwner(user);
     }
 }

@@ -18,7 +18,8 @@ import java.util.Objects;
 @AllArgsConstructor
 @SuperBuilder
 @NamedQueries({
-        @NamedQuery(name = "Trip.findByStatus", query = "SELECT t FROM Trip t WHERE t.status = :status")
+        @NamedQuery(name = "Trip.findByStatus", query = "SELECT t FROM Trip t WHERE t.status = :status"),
+        @NamedQuery(name = "Trip.findByAuthor", query = "SELECT t FROM Trip t WHERE t.author = :author")
 })
 public class Trip extends AbstractEntity {
 
@@ -64,13 +65,12 @@ public class Trip extends AbstractEntity {
     @JoinColumn(nullable = false)
     private User author;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "trip_id")
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("time DESC")
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "trip_id")
+    @OneToMany(mappedBy = "trip", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Attendlist> attendlists = new ArrayList<>();
 
@@ -87,23 +87,5 @@ public class Trip extends AbstractEntity {
     public void addAttendlist(Attendlist attendlist) {
         Objects.requireNonNull(attendlist);
         attendlists.add(attendlist);
-    }
-
-    @Override
-    public String toString() {
-        return "Trip{" +
-                "attendlists=" + attendlists +
-                ", status=" + status +
-                ", title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", imagePath='" + imagePath + '\'' +
-                ", country='" + country + '\'' +
-                ", capacity=" + capacity +
-                ", startDate=" + startDate +
-                ", endDate=" + endDate +
-                ", created=" + created +
-                ", author=" + author +
-                ", comments=" + comments +
-                '}';
     }
 }

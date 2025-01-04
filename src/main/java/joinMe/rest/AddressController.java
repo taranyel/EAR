@@ -5,7 +5,6 @@ import joinMe.db.entity.User;
 import joinMe.rest.dto.AddressDTO;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.UserDTO;
-import joinMe.security.model.UserDetails;
 import joinMe.service.AddressService;
 import joinMe.service.UserService;
 import org.slf4j.Logger;
@@ -72,7 +71,7 @@ public class AddressController {
     public AddressDTO getCurrentAddress(Authentication auth) {
         User user = userService.getCurrent(auth);
         LOG.info("Retrieving current address.");
-        return mapper.toDto(user.getAddress());
+        return mapper.toDto(addressService.findByID(user.getAddress().getId()));
     }
 
     @PreAuthorize("!anonymous")

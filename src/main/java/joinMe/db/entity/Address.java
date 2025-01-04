@@ -40,8 +40,7 @@ public abstract class Address extends AbstractEntity {
     @Column(name = "country", nullable = false)
     private String country;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "address_id")
+    @OneToMany(mappedBy = "address", fetch = FetchType.EAGER)
     @Builder.Default
     private List<User> residents = new ArrayList<>();
 

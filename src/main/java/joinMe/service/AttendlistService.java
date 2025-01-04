@@ -2,7 +2,6 @@ package joinMe.service;
 
 import jakarta.transaction.Transactional;
 import joinMe.db.dao.AttendlistDao;
-import joinMe.db.dao.MessageDao;
 import joinMe.db.dao.TripDao;
 import joinMe.db.dao.UserDao;
 import joinMe.db.entity.Attendlist;
@@ -25,19 +24,11 @@ public class AttendlistService {
 
     private final UserDao userDao;
 
-    private final MessageDao messageDao;
-
     @Autowired
-    public AttendlistService(AttendlistDao attendlistDao, TripDao tripDao, UserDao userDao, MessageDao messageDao) {
+    public AttendlistService(AttendlistDao attendlistDao, TripDao tripDao, UserDao userDao) {
         this.attendlistDao = attendlistDao;
         this.tripDao = tripDao;
         this.userDao = userDao;
-        this.messageDao = messageDao;
-    }
-
-    public User getAdmin(Attendlist attendlist) {
-        Objects.requireNonNull(attendlist);
-        return attendlist.getTrip().getAuthor();
     }
 
     public Attendlist findByID(Integer id) {
@@ -50,24 +41,30 @@ public class AttendlistService {
                 .trip(trip)
                 .build();
 
-        attendlistDao.persist(attendlist);
         admin.addAttendlist(attendlist);
         trip.addAttendlist(attendlist);
 
-        userDao.update(admin);
         tripDao.update(trip);
+        userDao.update(admin);
         return attendlist;
     }
 
     public void addMessage(Attendlist attendlist, Message message) {
         Objects.requireNonNull(attendlist);
         Objects.requireNonNull(message);
-        attendlist.addMessage(message);
-        attendlistDao.update(attendlist);
 
         message.setAttendlist(attendlist);
         message.setAuthor(attendlist.getJoiner());
-        messageDao.persist(message);
+
+        attendlist.addMessage(message);
+        attendlistDao.update(attendlist);
+    }
+
+    public void removeMessage(Attendlist attendlist, Message message) {
+        Objects.requireNonNull(attendlist);
+        Objects.requireNonNull(message);
+        attendlist.removeMessage(message);
+        attendlistDao.update(attendlist);
     }
 
     public Attendlist findByTripAndJoiner(Trip trip, User joiner) {
@@ -76,8 +73,13 @@ public class AttendlistService {
         return attendlistDao.findByTripAndJoiner(trip, joiner);
     }
 
-    public List<Attendlist> findByTrip(Trip trip) {
+    public List<Message> findAllMessagesByTrip(Trip trip) {
         Objects.requireNonNull(trip);
-        return attendlistDao.findByTrip(trip);
+        return attendlistDao.findAllMessagesByTrip(trip);
+    }
+
+    public List<Attendlist> findByJoiner(User user) {
+        Objects.requireNonNull(user);
+        return attendlistDao.findByJoiner(user);
     }
 }

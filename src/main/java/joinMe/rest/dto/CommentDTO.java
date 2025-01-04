@@ -5,13 +5,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @Builder
 public class CommentDTO {
     private Integer id;
-    private UserDTO author;
+    private String authorUsername;
     private String text;
     private TripDTO trip;
+    private LocalDateTime time;
 }

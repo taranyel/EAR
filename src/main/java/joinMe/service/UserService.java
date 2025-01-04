@@ -99,6 +99,7 @@ public class UserService {
     public void removeTrip(User user, Trip trip) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
+        user.removeAttendlist(attendlistDao.findByTripAndJoiner(trip, user));
         user.removeTrip(trip);
         userDao.update(user);
     }

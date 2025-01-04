@@ -56,13 +56,13 @@ public class SystemInitializer {
             return;
         }
         User admin = createUser();
-        Address address = createAddress();
-        addressService.persist(address);
-
-        admin.setAddress(address);
         userService.persist(admin);
         userService.setAdmin(admin);
+
+        Address address = createAddress();
+        admin.setAddress(address);
         address.addResident(admin);
+        addressService.persist(address);
 
         LOG.info("Generated admin user with credentials {}/{}", admin.getUsername(), admin.getPassword());
     }

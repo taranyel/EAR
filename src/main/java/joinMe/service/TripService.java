@@ -56,7 +56,6 @@ public class TripService {
             Attendlist attendlist = attendlistDao.findByTripAndJoiner(trip, joiner);
             joiner.removeAttendlist(attendlist);
             userDao.update(joiner);
-            attendlistDao.remove(attendlist);
         }
 
         tripDao.remove(trip);
@@ -66,6 +65,7 @@ public class TripService {
         Objects.requireNonNull(trip);
         Objects.requireNonNull(comment);
         trip.addComment(comment);
+        comment.setTrip(trip);
         tripDao.update(trip);
     }
 
@@ -78,6 +78,11 @@ public class TripService {
 
     public List<Trip> findAllActiveTrips() {
         return tripDao.findByStatus(TripStatus.ACTIVE);
+    }
+
+    public List<Trip> findByAuthor(User user) {
+        Objects.requireNonNull(user);
+        return tripDao.findByAuthor(user);
     }
 
     public Trip findByID(Integer id) {

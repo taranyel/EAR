@@ -5,7 +5,6 @@ import joinMe.db.entity.User;
 import joinMe.rest.dto.ComplaintDTO;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.util.RestUtils;
-import joinMe.security.model.UserDetails;
 import joinMe.service.ComplaintService;
 import joinMe.service.UserService;
 import org.slf4j.Logger;
@@ -41,19 +40,25 @@ public class ComplaintController {
     }
 
     @PreAuthorize("!anonymous")
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createComplaint(Authentication auth, @RequestBody ComplaintDTO complaintDTO) {
+    @PostMapping(value = "/{accusedID}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createComplaint(@PathVariable Integer accusedID, @RequestBody ComplaintDTO complaintDTO) {
         if (complaintDTO == null) {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
 
-        User user = userService.getCurrent(auth);
+        User accused = userService.findByID(accusedID);
+        if (accused == null) {
+            return new ResponseEntity<>("Accused user with id: " + accusedID + " not found.", HttpStatus.NOT_FOUND);
+        }
+
         Complaint complaint = mapper.toEntity(complaintDTO);
 
         try {
-            User.isBlocked(user);
+            User.isBlocked(accused);
+
+            complaint.setAccused(accused);
             complaintService.persist(complaint);
-            userService.addComplaint(user, complaint);
+            userService.addComplaint(accused, complaint);
 
             LOG.debug("Created complaint {}.", complaintDTO);
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", complaint.getId());
@@ -91,7 +96,7 @@ public class ComplaintController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ComplaintDTO> getComplaintsToCurrentUser(Authentication auth) {
         User user = userService.getCurrent(auth);
-        return user.getComplaints()
+        return complaintService.findByAccused(user)
                 .stream()
                 .map(mapper::toDto)
                 .toList();

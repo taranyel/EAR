@@ -6,7 +6,6 @@ import joinMe.rest.dto.CommentDTO;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.TripDTO;
 import joinMe.rest.util.RestUtils;
-import joinMe.security.model.UserDetails;
 import joinMe.service.AttendlistService;
 import joinMe.service.CommentService;
 import joinMe.service.TripService;
@@ -106,8 +105,6 @@ public class TripController {
             User.isBlocked(user);
 
             trip.setAuthor(user);
-            tripService.persist(trip);
-
             userService.addTrip(user, trip);
             Attendlist attendlist = attendlistService.create(user, trip);
 
@@ -206,7 +203,7 @@ public class TripController {
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TripDTO> getCurrentUserTrips(Authentication auth) {
         User user = userService.getCurrent(auth);
-        return user.getTrips()
+        return tripService.findByAuthor(user)
                 .stream()
                 .map(mapper::toDto)
                 .toList();
@@ -237,8 +234,8 @@ public class TripController {
             Trip trip = getTrip(tripID);
             Comment comment = mapper.toEntity(commentDTO);
 
+            comment.setAuthor(user);
             tripService.addComment(trip, comment);
-            commentService.persist(comment);
             LOG.debug("Added comment {}.", comment);
             return new ResponseEntity<>(HttpStatus.CREATED);
 
@@ -249,12 +246,29 @@ public class TripController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping(value = "/{tripID}/{commentID}")
+    public ResponseEntity<String> deleteComment(@PathVariable Integer tripID, @PathVariable Integer commentID) {
+        Comment comment = commentService.findByID(commentID);
+        Trip trip = tripService.findByID(tripID);
+
+        if (comment == null) {
+            return new ResponseEntity<>("Comment with id: " + commentID + " was not found.", HttpStatus.NOT_FOUND);
+        }
+        if (trip == null) {
+            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
+        }
+
+        tripService.removeComment(trip, comment);
+        return new ResponseEntity<>("Comment was successfully deleted.", HttpStatus.OK);
+    }
+
+
     private Trip getTrip(int id) {
         Trip trip = tripService.findByID(id);
         if (trip == null) {
             throw NotFoundException.create("Trip", id);
         }
-
         return trip;
     }
 }

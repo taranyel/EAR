@@ -6,7 +6,6 @@ import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.RegisterDTO;
 import joinMe.rest.dto.UserDTO;
 import joinMe.rest.util.RestUtils;
-import joinMe.security.model.UserDetails;
 import joinMe.service.AddressService;
 import joinMe.service.UserService;
 import org.slf4j.Logger;
@@ -20,7 +19,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.AccessDeniedException;
 import java.util.Objects;
 
 @RestController
@@ -91,7 +89,7 @@ public class UserController {
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserDTO getCurrent(Authentication auth) {
         User user = userService.getCurrent(auth);
-        return mapper.toDto(user);
+        return mapper.toDto(userService.findByID(user.getId()));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

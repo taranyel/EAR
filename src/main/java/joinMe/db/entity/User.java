@@ -69,10 +69,10 @@ public class User extends AbstractEntity {
     private String imagePath;
 
     @ManyToOne(cascade = CascadeType.MERGE)
-    @JoinColumn()
+    @JoinColumn
     private Address address;
 
-    @OneToMany(mappedBy = "accused", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "accused", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<Complaint> complaints = new ArrayList<>();
 
@@ -85,11 +85,11 @@ public class User extends AbstractEntity {
     @Builder.Default
     private List<Trip> trips = new ArrayList<>();
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<Wishlist> wishlists = new ArrayList<>();
 
-    @OneToMany(mappedBy = "requester", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<JoinRequest> joinRequests = new ArrayList<>();
 

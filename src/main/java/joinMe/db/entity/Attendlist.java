@@ -18,12 +18,11 @@ import java.util.Objects;
 @AllArgsConstructor
 @NamedQueries({
         @NamedQuery(name = "Attendlist.findByTripAndJoiner", query = "SELECT a FROM Attendlist a WHERE a.trip = :trip AND a.joiner = :joiner"),
-        @NamedQuery(name = "Attendlist.findByTrip", query = "SELECT a FROM Attendlist a WHERE a.trip = :trip")
+        @NamedQuery(name = "Attendlist.findByJoiner", query = "SELECT a FROM Attendlist a WHERE a.joiner = :joiner")
 })
 public class Attendlist extends AbstractEntity{
 
-    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "attendlist_id")
+    @OneToMany(mappedBy = "attendlist", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Message> messages;
 
     @ManyToOne
@@ -37,6 +36,11 @@ public class Attendlist extends AbstractEntity{
     public void addMessage(Message message) {
         Objects.requireNonNull(message);
         messages.add(message);
+    }
+
+    public void removeMessage(Message message) {
+        Objects.requireNonNull(message);
+        messages.remove(message);
     }
 
     public User getAdmin() {

@@ -37,6 +37,11 @@ public class JoinRequestService {
         return dao.getJoinRequestsForApproval(author);
     }
 
+    public List<JoinRequest> findByRequester(User requester) {
+        Objects.requireNonNull(requester);
+        return dao.findByRequester(requester);
+    }
+
     public void remove(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         dao.remove(joinRequest);
