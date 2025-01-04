@@ -1,5 +1,6 @@
 package joinMe.rest;
 
+import jakarta.validation.Valid;
 import joinMe.db.entity.Address;
 import joinMe.db.entity.User;
 import joinMe.rest.dto.Mapper;
@@ -41,30 +42,31 @@ public class UserController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> register(@RequestBody RegisterDTO registerDTO) {
-        if (registerDTO == null) {
-            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
-        } else if (registerDTO.getUser() == null || registerDTO.getAddress() == null) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterDTO registerDTO, Authentication auth) {
+        if (registerDTO.getUser() == null || registerDTO.getAddress() == null) {
+            LOG.warn("Data is missing.");
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
 
         User user = mapper.toEntity(registerDTO.getUser());
+
+        ResponseEntity<String> result = userService.checkAuthRole(auth, user, "registration", LOG);
+        if (result != null) {
+            return result;
+        }
+
         Address address = mapper.toEntity(registerDTO.getAddress());
         addressService.setAddress(address, user);
 
-        try {
-            userService.persist(user);
-            final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
-            return new ResponseEntity<>(headers, HttpStatus.CREATED);
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        userService.persist(user);
+        LOG.info("User \"{}\" successfully registered.", user.getUsername());
+        final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
-    @PreAuthorize("!anonymous")
+//    @PreAuthorize("!anonymous")
     @PutMapping(value = "/current", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> updateUser(Authentication auth, @RequestBody UserDTO userDTO) {
+    public ResponseEntity<String> updateUser(Authentication auth, @Valid @RequestBody UserDTO userDTO) {
         if (userDTO == null) {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
@@ -72,23 +74,26 @@ public class UserController {
         User user = userService.getCurrent(auth);
         User userToUpdate = mapper.toEntity(userDTO);
 
-        if (!Objects.equals(user.getId(), userDTO.getId())) {
+        ResponseEntity<String> result = userService.checkAuthRole(auth, userToUpdate, "update", LOG);
+        if (result != null) {
+            return result;
+        }
+
+        if (!userService.isAdmin(user) && !Objects.equals(user.getId(), userDTO.getId())) {
+            LOG.warn("Cannot change data of another user.");
             return new ResponseEntity<>("Cannot change data of another user.", HttpStatus.FORBIDDEN);
         }
 
-        try {
-            userService.update(user, userToUpdate);
-            LOG.info("Updated user {}.", userDTO);
-            return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        userService.update(user, userToUpdate);
+        LOG.info("User \"{}\" was successfully updated.", userToUpdate.getUsername());
+        return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserDTO getCurrent(Authentication auth) {
         User user = userService.getCurrent(auth);
+        LOG.info("User \"{}\" requested their data.", user.getUsername());
         return mapper.toDto(userService.findByID(user.getId()));
     }
 
@@ -98,9 +103,11 @@ public class UserController {
         User user = userService.findByID(id);
 
         if (user == null) {
+            LOG.warn("User with id: {} was not found.", id);
             return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
         }
         userService.remove(user);
+        LOG.info("User \"{}\" was successfully deleted.", user.getUsername());
         return new ResponseEntity<>("User was successfully deleted.", HttpStatus.OK);
     }
 
@@ -110,9 +117,11 @@ public class UserController {
         User user = userService.findByID(id);
 
         if (user == null) {
+            LOG.warn("User with id: {} was not found.", id);
             return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
         }
         userService.setAdmin(user);
+        LOG.info("New admin was successfully set.");
         return new ResponseEntity<>("New admin was successfully set.", HttpStatus.OK);
     }
 
@@ -122,9 +131,11 @@ public class UserController {
         User user = userService.findByID(id);
 
         if (user == null) {
+            LOG.warn("User with id: {} was not found.", id);
             return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
         }
         userService.blockUser(user);
+        LOG.info("User \"{}\" was blocked.", user.getUsername());
         return new ResponseEntity<>("User was blocked", HttpStatus.OK);
     }
 
@@ -134,9 +145,11 @@ public class UserController {
         User user = userService.findByID(id);
 
         if (user == null) {
+            LOG.warn("User with id: {} was not found.", id);
             return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
         }
         userService.unblockUser(user);
+        LOG.info("User \"{}\" was unblocked.", user.getUsername());
         return new ResponseEntity<>("User was unblocked", HttpStatus.OK);
     }
 }

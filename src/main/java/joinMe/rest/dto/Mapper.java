@@ -143,6 +143,7 @@ public class Mapper {
                 .lastName(userDTO.getLastName())
                 .username(userDTO.getUsername())
                 .password(userDTO.getPassword())
+                .role(userDTO.getRole())
                 .build();
     }
 

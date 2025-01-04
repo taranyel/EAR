@@ -71,6 +71,7 @@ public class User extends AbstractEntity {
 
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn
+    @JsonIgnore
     private Address address;
 
     @OneToMany(mappedBy = "accused", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

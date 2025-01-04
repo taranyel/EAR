@@ -112,12 +112,6 @@ public class TripService {
     }
 
     @Transactional
-    public List<Trip> findByAuthor(User author) {
-        Objects.requireNonNull(author);
-        return tripDao.findByAuthor(author);
-    }
-
-    @Transactional
     public Trip findByID(Integer id) {
         return tripDao.find(id);
     }

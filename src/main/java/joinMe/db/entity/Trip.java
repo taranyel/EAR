@@ -19,7 +19,11 @@ import java.util.Objects;
 @SuperBuilder
 @NamedQueries({
         @NamedQuery(name = "Trip.findByStatus", query = "SELECT t FROM Trip t WHERE t.status = :status"),
-        @NamedQuery(name = "Trip.findByAuthor", query = "SELECT t FROM Trip t WHERE t.author = :author")
+        @NamedQuery(name = "Trip.findByAuthor", query = "SELECT t FROM Trip t WHERE t.author = :author"),
+        @NamedQuery(name = "Trip.findByCountry", query = "SELECT t FROM Trip t WHERE t.country = :country"),
+        @NamedQuery(name = "Trip.findByStartDate", query = "SELECT t FROM Trip t WHERE t.startDate = :startDate"),
+        @NamedQuery(name = "Trip.findByEndDate", query = "SELECT t FROM Trip t WHERE t.endDate = :endDate"),
+        @NamedQuery(name = "Trip.findByCapacity", query = "SELECT t FROM Trip t WHERE t.capacity = :capacity"),
 })
 public class Trip extends AbstractEntity {
 
