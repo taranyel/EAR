@@ -97,6 +97,18 @@ public class UserController {
         return mapper.toDto(userService.findByID(user.getId()));
     }
 
+    @PreAuthorize("!anonymous")
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public UserDTO getUser(@PathVariable Integer id) {
+        User user = userService.findByID(id);
+        if (user == null) {
+            return null;
+        }
+        return mapper.forOthers(user);
+    }
+
+
+
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable Integer id) {

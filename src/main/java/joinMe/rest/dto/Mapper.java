@@ -33,6 +33,18 @@ public class Mapper {
                 .build();
     }
 
+    public UserDTO forOthers(User user) {
+        return UserDTO.builder()
+                .id(user.getId())
+                .rating(user.getRating())
+                .firstName(user.getFirstName())
+                .birthDate(user.getBirthdate())
+                .lastName(user.getLastName())
+                .username(user.getUsername())
+                .imagePath(user.getImagePath())
+                .build();
+    }
+
     public UserDTO toDto(User user) {
         return UserDTO.builder()
                 .id(user.getId())
