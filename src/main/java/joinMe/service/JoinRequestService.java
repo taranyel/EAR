@@ -42,6 +42,17 @@ public class JoinRequestService {
         return dao.findByRequester(requester);
     }
 
+    public List<JoinRequest> findByTrip(Trip trip) {
+        Objects.requireNonNull(trip);
+        return dao.findByTrip(trip);
+    }
+
+    public JoinRequest findByRequesterAndTrip(User requester, Trip trip) {
+        Objects.requireNonNull(requester);
+        Objects.requireNonNull(trip);
+        return dao.findByRequesterAndTrip(requester, trip);
+    }
+
     public void remove(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         dao.remove(joinRequest);

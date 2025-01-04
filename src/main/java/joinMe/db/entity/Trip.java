@@ -74,6 +74,10 @@ public class Trip extends AbstractEntity {
     @Builder.Default
     private List<Attendlist> attendlists = new ArrayList<>();
 
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    private List<JoinRequest> joinRequests = new ArrayList<>();
+
     public void addComment(Comment comment) {
         Objects.requireNonNull(comment);
         comments.add(comment);
@@ -87,5 +91,10 @@ public class Trip extends AbstractEntity {
     public void addAttendlist(Attendlist attendlist) {
         Objects.requireNonNull(attendlist);
         attendlists.add(attendlist);
+    }
+
+    public void removeAttendlist(Attendlist attendlist) {
+        Objects.requireNonNull(attendlist);
+        attendlists.remove(attendlist);
     }
 }

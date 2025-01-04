@@ -82,4 +82,9 @@ public class AttendlistService {
         Objects.requireNonNull(user);
         return attendlistDao.findByJoiner(user);
     }
+
+    public void remove(Attendlist attendlist) {
+        Objects.requireNonNull(attendlist);
+        attendlistDao.remove(attendlist);
+    }
 }
