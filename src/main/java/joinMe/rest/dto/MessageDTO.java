@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class MessageDTO {
     private Integer id;
     private AttendlistDTO attendlist;
-    private UserDTO author;
+    private String authorUsername;
     private String text;
     private LocalDateTime time;
 }

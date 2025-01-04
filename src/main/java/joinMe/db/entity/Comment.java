@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
+
 @Setter
 @Getter
 @Entity
@@ -29,4 +31,8 @@ public class Comment extends AbstractEntity {
     @ManyToOne
     @JoinColumn(nullable = false)
     private User author;
+
+    @Basic(optional = false)
+    @Column(name = "time", nullable = false)
+    private LocalDateTime time;
 }

@@ -5,7 +5,6 @@ import joinMe.db.entity.User;
 import joinMe.rest.dto.ComplaintDTO;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.util.RestUtils;
-import joinMe.security.model.UserDetails;
 import joinMe.service.ComplaintService;
 import joinMe.service.UserService;
 import org.slf4j.Logger;
@@ -41,21 +40,31 @@ public class ComplaintController {
     }
 
     @PreAuthorize("!anonymous")
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createComplaint(Authentication auth, @RequestBody ComplaintDTO complaintDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+    @PostMapping(value = "/{accusedID}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createComplaint(@PathVariable Integer accusedID, @RequestBody ComplaintDTO complaintDTO) {
+        if (complaintDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
+
+        User accused = userService.findByID(accusedID);
+        if (accused == null) {
+            return new ResponseEntity<>("Accused user with id: " + accusedID + " not found.", HttpStatus.NOT_FOUND);
+        }
+
         Complaint complaint = mapper.toEntity(complaintDTO);
 
         try {
-            User.isBlocked(user);
+            User.isBlocked(accused);
+
+            complaint.setAccused(accused);
             complaintService.persist(complaint);
-            userService.addComplaint(user, complaint);
+            userService.addComplaint(accused, complaint);
 
             LOG.debug("Created complaint {}.", complaintDTO);
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", complaint.getId());
             return new ResponseEntity<>(headers, HttpStatus.CREATED);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NO_CONTENT);
         }
@@ -64,8 +73,7 @@ public class ComplaintController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> deleteComplaint(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        User user = userService.getCurrent(auth);
 
         Complaint complaint = complaintService.findByID(id);
         if (complaint == null) {
@@ -79,6 +87,7 @@ public class ComplaintController {
         }
 
         userService.removeComplaint(user, complaint);
+        complaintService.remove(complaint);
 
         return new ResponseEntity<>("Complaint was successfully deleted.", HttpStatus.OK);
     }
@@ -86,10 +95,8 @@ public class ComplaintController {
     @PreAuthorize("!anonymous")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ComplaintDTO> getComplaintsToCurrentUser(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
-        return user.getComplaints()
+        User user = userService.getCurrent(auth);
+        return complaintService.findByAccused(user)
                 .stream()
                 .map(mapper::toDto)
                 .toList();

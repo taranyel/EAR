@@ -69,11 +69,11 @@ public class User extends AbstractEntity {
     @Column(name = "image_path")
     private String imagePath;
 
-    @ManyToOne(optional = false, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-    @JoinColumn(nullable = false)
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn
     private Address address;
 
-    @OneToMany(mappedBy = "accused", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "accused", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     @JsonIgnore
     private List<Complaint> complaints = new ArrayList<>();
@@ -89,12 +89,12 @@ public class User extends AbstractEntity {
     @JsonIgnore
     private List<Trip> trips = new ArrayList<>();
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     @JsonIgnore
     private List<Wishlist> wishlists = new ArrayList<>();
 
-    @OneToMany(mappedBy = "requester", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     @JsonIgnore
     private List<JoinRequest> joinRequests = new ArrayList<>();

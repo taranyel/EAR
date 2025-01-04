@@ -7,7 +7,7 @@ import joinMe.db.exception.NotFoundException;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.TripDTO;
 import joinMe.rest.util.RestUtils;
-import joinMe.security.model.UserDetails;
+import joinMe.service.TripService;
 import joinMe.service.UserService;
 import joinMe.service.WishlistService;
 import org.slf4j.Logger;
@@ -34,22 +34,29 @@ public class WishlistController {
 
     private final UserService userService;
 
+    private final TripService tripService;
+
     private final Mapper mapper;
 
     @Autowired
-    public WishlistController(WishlistService wishlistService, UserService userService, Mapper mapper) {
+    public WishlistController(WishlistService wishlistService, UserService userService,
+                              TripService tripService, Mapper mapper) {
         this.wishlistService = wishlistService;
         this.userService = userService;
+        this.tripService = tripService;
         this.mapper = mapper;
     }
 
     @PreAuthorize("!anonymous")
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> createWishlist(Authentication auth, @RequestBody TripDTO tripDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+    @PostMapping(value = "/{tripID}")
+    public ResponseEntity<String> createWishlist(Authentication auth, @PathVariable Integer tripID) {
+        User user = userService.getCurrent(auth);
+        Trip trip = tripService.findByID(tripID);
 
-        Trip trip = mapper.toEntity(tripDTO);
+        if (trip == null) {
+            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
+        }
+
         Wishlist wishlist = wishlistService.create(user, trip);
         userService.addWishlist(user, wishlist);
 
@@ -60,10 +67,8 @@ public class WishlistController {
 
     @PreAuthorize("!anonymous")
     @DeleteMapping(value = "/{id}")
-    public ResponseEntity<String> deleteWishlist(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-
+    public ResponseEntity<String> deleteWishlist(Authentication auth, @PathVariable Integer id) {
+        User user = userService.getCurrent(auth);
         try {
             Wishlist wishlist = getWishlist(id, user);
             userService.removeWishlist(user, wishlist);
@@ -71,7 +76,7 @@ public class WishlistController {
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (AccessDeniedException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
@@ -79,12 +84,8 @@ public class WishlistController {
     @PreAuthorize("!anonymous")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TripDTO> getAllWishlists(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-
-        return user.getWishlists().stream()
-                .map(Wishlist::getTrip)
-                .toList()
+        User user = userService.getCurrent(auth);
+        return wishlistService.findWishlistByOwner(user)
                 .stream()
                 .map(mapper::toDto)
                 .toList();
@@ -93,9 +94,7 @@ public class WishlistController {
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public TripDTO getWishlist(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
-
+        User user = userService.getCurrent(auth);
         try {
             return mapper.toDto(getWishlist(id, user).getTrip());
         } catch (Exception e) {
@@ -112,7 +111,6 @@ public class WishlistController {
         if (!wishlist.getOwner().getId().equals(user.getId())) {
             throw new AccessDeniedException("Cannot access wishlist of another user.");
         }
-
         return wishlist;
     }
 }

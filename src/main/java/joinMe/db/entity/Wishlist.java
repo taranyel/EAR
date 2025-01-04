@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @NamedQueries({
-        @NamedQuery(name = "Wishlist.findTripsByOwner", query = "SELECT w.trip FROM Wishlist w WHERE w.owner = :owner")
+        @NamedQuery(name = "Wishlist.findTripsByOwner", query = "SELECT w FROM Wishlist w WHERE w.owner = :owner")
 })
 public class Wishlist extends AbstractEntity {
 

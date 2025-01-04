@@ -2,7 +2,9 @@ package joinMe.service;
 
 import joinMe.db.dao.*;
 import joinMe.db.entity.*;
+import joinMe.security.model.UserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,29 +19,27 @@ public class UserService {
 
     private final UserDao userDao;
 
-    private final TripDao tripDao;
-
     private final JoinRequestDao joinRequestDao;
 
     private final AttendlistDao attendlistDao;
 
     private final PasswordEncoder passwordEncoder;
 
-    private final ComplaintDao complaintDao;
-
     private final WishlistDao wishlistDao;
 
-
     @Autowired
-    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao,
-                       ComplaintDao complaintDao, WishlistDao wishlistDao, PasswordEncoder passwordEncoder, TripDao tripDao) {
+    public UserService(UserDao userDao, JoinRequestDao joinRequestDao, AttendlistDao attendlistDao, WishlistDao wishlistDao,
+                       PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
         this.joinRequestDao = joinRequestDao;
         this.attendlistDao = attendlistDao;
-        this.complaintDao = complaintDao;
         this.wishlistDao = wishlistDao;
         this.passwordEncoder = passwordEncoder;
-        this.tripDao = tripDao;
+    }
+
+    public void update(User user) {
+        Objects.requireNonNull(user);
+        userDao.update(user);
     }
 
     public void update(User current, User newUser) throws AccessDeniedException {
@@ -91,8 +91,6 @@ public class UserService {
     public void addTrip(User user, Trip trip) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
-        trip.setAuthor(user);
-        tripDao.persist(trip);
         user.addTrip(trip);
         userDao.update(user);
     }
@@ -101,6 +99,7 @@ public class UserService {
     public void removeTrip(User user, Trip trip) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
+        user.removeAttendlist(attendlistDao.findByTripAndJoiner(trip, user));
         user.removeTrip(trip);
         userDao.update(user);
     }
@@ -132,7 +131,6 @@ public class UserService {
         Objects.requireNonNull(complaint);
         user.removeComplaint(complaint);
         userDao.update(user);
-        complaintDao.remove(complaint);
     }
 
     public void leaveAttendlist(User user, Attendlist attendlist) {
@@ -154,7 +152,6 @@ public class UserService {
         Objects.requireNonNull(joinRequest);
         user.removeJoinRequest(joinRequest);
         userDao.update(user);
-        joinRequestDao.remove(joinRequest);
     }
 
     public Long getId(String username) {
@@ -205,5 +202,11 @@ public class UserService {
     public void setAdmin(User user) {
         user.setRole(Role.ADMIN);
         userDao.update(user);
+    }
+
+    public User getCurrent(Authentication auth) {
+        assert auth.getPrincipal() instanceof UserDetails;
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        return findByID(userId);
     }
 }

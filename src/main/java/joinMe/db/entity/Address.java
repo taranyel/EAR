@@ -15,6 +15,10 @@ import java.util.Objects;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@NamedQueries({
+        @NamedQuery(name = "Address.findAll", query = "SELECT a FROM Address a"),
+        @NamedQuery(name = "Address.findByAll", query = "SELECT a FROM Address a WHERE a.country = :country AND a.city = :city AND a.number = :number AND a.postIndex = :postIndex AND a.street = :street")
+})
 public abstract class Address extends AbstractEntity {
 
     @Basic(optional = false)
@@ -37,8 +41,7 @@ public abstract class Address extends AbstractEntity {
     @Column(name = "country", nullable = false)
     private String country;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "address_id")
+    @OneToMany(mappedBy = "address", fetch = FetchType.EAGER)
     @Builder.Default
     @JsonIgnore
     private List<User> residents = new ArrayList<>();

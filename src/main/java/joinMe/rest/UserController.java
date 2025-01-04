@@ -1,10 +1,12 @@
 package joinMe.rest;
 
+import joinMe.db.entity.Address;
 import joinMe.db.entity.User;
 import joinMe.rest.dto.Mapper;
+import joinMe.rest.dto.RegisterDTO;
 import joinMe.rest.dto.UserDTO;
 import joinMe.rest.util.RestUtils;
-import joinMe.security.model.UserDetails;
+import joinMe.service.AddressService;
 import joinMe.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +19,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.AccessDeniedException;
 import java.util.Objects;
 
 @RestController
@@ -28,39 +29,47 @@ public class UserController {
 
     private final UserService userService;
 
+    private final AddressService addressService;
+
     private final Mapper mapper;
 
     @Autowired
-    public UserController(UserService userService, Mapper mapper) {
+    public UserController(UserService userService, Mapper mapper, AddressService addressService) {
         this.userService = userService;
         this.mapper = mapper;
+        this.addressService = addressService;
     }
 
-    /**
-     * Registers a new user.
-     *
-     * @param userDTO User data
-     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> register(@RequestBody UserDTO userDTO) {
-        User user = mapper.toEntity(userDTO);
+    public ResponseEntity<String> register(@RequestBody RegisterDTO registerDTO) {
+        if (registerDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        } else if (registerDTO.getUser() == null || registerDTO.getAddress() == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = mapper.toEntity(registerDTO.getUser());
+        Address address = mapper.toEntity(registerDTO.getAddress());
+        addressService.setAddress(address, user);
 
         try {
             userService.persist(user);
-            LOG.debug("User {} successfully registered.", userDTO);
             final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
             return new ResponseEntity<>(headers, HttpStatus.CREATED);
 
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PreAuthorize("!anonymous")
     @PutMapping(value = "/current", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateUser(Authentication auth, @RequestBody UserDTO userDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        if (userDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userService.getCurrent(auth);
         User userToUpdate = mapper.toEntity(userDTO);
 
         if (!Objects.equals(user.getId(), userDTO.getId())) {
@@ -71,18 +80,16 @@ public class UserController {
             userService.update(user, userToUpdate);
             LOG.info("Updated user {}.", userDTO);
             return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
-        } catch (AccessDeniedException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserDTO getCurrent(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
-        return mapper.toDto(user);
+        User user = userService.getCurrent(auth);
+        return mapper.toDto(userService.findByID(user.getId()));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

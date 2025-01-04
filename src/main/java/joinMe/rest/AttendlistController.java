@@ -11,9 +11,9 @@ import joinMe.rest.dto.MessageDTO;
 import joinMe.rest.dto.UserDTO;
 import joinMe.security.model.UserDetails;
 import joinMe.service.AttendlistService;
+import joinMe.service.MessageService;
 import joinMe.service.TripService;
 import joinMe.service.UserService;
-import joinMe.util.MessageComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,24 +39,26 @@ public class AttendlistController {
 
     private final UserService userService;
 
+    private final MessageService messageService;
+
     private final Mapper mapper;
 
     @Autowired
     public AttendlistController(AttendlistService attendlistService, UserService userService,
-                                Mapper mapper, TripService tripService) {
+                                Mapper mapper, TripService tripService, MessageService messageService) {
         this.attendlistService = attendlistService;
         this.userService = userService;
         this.mapper = mapper;
+        this.messageService = messageService;
         this.tripService = tripService;
     }
 
     @PreAuthorize("!anonymous")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<AttendlistDTO> getCurrentUserAttendLists(Authentication auth) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
-        return user.getAttendlists()
+        User user = userService.getCurrent(auth);
+
+        return attendlistService.findByJoiner(user)
                 .stream()
                 .map(mapper::toDto)
                 .toList();
@@ -71,17 +73,9 @@ public class AttendlistController {
             return null;
         }
 
-        List<Attendlist> attendlists = attendlistService.findByTrip(trip);
-        if (attendlists.isEmpty()) {
-            return null;
-        }
-
-        return attendlists
+        return attendlistService.findAllMessagesByTrip(trip)
                 .stream()
-                .flatMap(attendlist -> attendlist.getMessages()
-                        .stream()
-                        .sorted(MessageComparator::compare)
-                        .map(mapper::toDto))
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -99,10 +93,11 @@ public class AttendlistController {
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addMessage(Authentication auth, @PathVariable int tripID, @RequestBody MessageDTO messageDTO) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
-        User user = userService.findByID(userId);
+        if (messageDTO == null) {
+            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
+        }
 
+        User user = userService.getCurrent(auth);
         Message message = mapper.toEntity(messageDTO);
         Trip trip = tripService.findByID(tripID);
 
@@ -112,23 +107,45 @@ public class AttendlistController {
 
         try {
             User.isBlocked(user);
+
             Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, user);
+
+            if (attendlist == null) {
+                return new ResponseEntity<>("You are not joiner of this trip.", HttpStatus.FORBIDDEN);
+            }
 
             attendlistService.addMessage(attendlist, message);
             LOG.debug("Added message {}.", messageDTO);
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (AccessDeniedException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping(value = "/{tripID}/{messageID}")
+    public ResponseEntity<String> deleteMessage(@PathVariable Integer tripID, @PathVariable Integer messageID) {
+        Message message = messageService.findByID(messageID);
+        Trip trip = tripService.findByID(tripID);
+
+        if (message == null) {
+            return new ResponseEntity<>("Message with id: " + messageID + " was not found.", HttpStatus.NOT_FOUND);
+        }
+        if (trip == null) {
+            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
+        }
+
+        Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, message.getAuthor());
+        attendlistService.removeMessage(attendlist, message);
+        return new ResponseEntity<>("Message was successfully deleted.", HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> leaveAttendlist(Authentication auth, @PathVariable int id) {
-        assert auth.getPrincipal() instanceof UserDetails;
-        final User user = ((UserDetails) auth.getPrincipal()).getUser();
+        User user = userService.getCurrent(auth);
 
         try {
             Attendlist attendlist = getAttendlist(user, id);
@@ -137,7 +154,7 @@ public class AttendlistController {
 
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (AccessDeniedException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
