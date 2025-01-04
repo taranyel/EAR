@@ -61,12 +61,9 @@ public class JoinRequestService {
             throw new JoinRequestException("User cannot create more than one join request to one trip.");
         }
 
-        JoinRequest joinRequest = JoinRequest.builder()
+        return JoinRequest.builder()
                 .requester(requester)
                 .trip(trip)
                 .build();
-
-        dao.persist(joinRequest);
-        return joinRequest;
     }
 }

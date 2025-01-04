@@ -49,9 +49,13 @@ public class WishlistController {
 
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{tripID}")
-    public ResponseEntity<Void> createWishlist(Authentication auth, @PathVariable Integer tripID) {
+    public ResponseEntity<String> createWishlist(Authentication auth, @PathVariable Integer tripID) {
         User user = userService.getCurrent(auth);
         Trip trip = tripService.findByID(tripID);
+
+        if (trip == null) {
+            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
+        }
 
         Wishlist wishlist = wishlistService.create(user, trip);
         userService.addWishlist(user, wishlist);
