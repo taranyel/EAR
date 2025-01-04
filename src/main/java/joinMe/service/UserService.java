@@ -2,7 +2,6 @@ package joinMe.service;
 
 import joinMe.db.dao.*;
 import joinMe.db.entity.*;
-import joinMe.db.exception.JoinRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
+@Transactional
 public class UserService {
 
     private final UserDao userDao;
@@ -42,7 +42,6 @@ public class UserService {
         this.tripDao = tripDao;
     }
 
-    @Transactional
     public void update(User current, User newUser) throws AccessDeniedException {
         Objects.requireNonNull(current);
         Objects.requireNonNull(newUser);
@@ -65,32 +64,30 @@ public class UserService {
         userDao.update(current);
     }
 
-    @Transactional
     public void remove(User user) {
         Objects.requireNonNull(user);
         userDao.remove(user);
     }
 
-    @Transactional
     public void persist(User user) {
+        Objects.requireNonNull(user);
+
         if (userDao.findByEmail(user.getEmail()) != null) {
             throw new IllegalArgumentException("User with this email already exists");
         }
         if (userDao.findByUsername(user.getUsername()) != null) {
             throw new IllegalArgumentException("User with this username already exists");
         }
-        Objects.requireNonNull(user);
+
         user.encodePassword(passwordEncoder);
         userDao.persist(user);
     }
 
-    @Transactional
     public User findByID(Integer id) {
         return userDao.find(id);
     }
 
     /// When trip is created, attendlist (chat) is created automatically and trip creator is added to the chat as admin
-    @Transactional
     public void addTrip(User user, Trip trip) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
@@ -101,7 +98,6 @@ public class UserService {
     }
 
     /// When user deletes trip, chat is also deleted for every trip joiner
-    @Transactional
     public void removeTrip(User user, Trip trip) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(trip);
@@ -109,7 +105,6 @@ public class UserService {
         userDao.update(user);
     }
 
-    @Transactional
     public void addWishlist(User user, Wishlist wishlist) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(wishlist);
@@ -117,7 +112,6 @@ public class UserService {
         userDao.update(user);
     }
 
-    @Transactional
     public void removeWishlist(User user, Wishlist wishlist) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(wishlist);
@@ -126,7 +120,6 @@ public class UserService {
         wishlistDao.remove(wishlist);
     }
 
-    @Transactional
     public void addComplaint(User user, Complaint complaint) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(complaint);
@@ -134,7 +127,6 @@ public class UserService {
         userDao.update(user);
     }
 
-    @Transactional
     public void removeComplaint(User user, Complaint complaint) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(complaint);
@@ -143,31 +135,6 @@ public class UserService {
         complaintDao.remove(complaint);
     }
 
-    @Transactional
-    public void addAttendlist(User user, Attendlist attendlist) {
-        Objects.requireNonNull(user);
-        Objects.requireNonNull(attendlist);
-
-        User tripCreator = attendlist.getAdmin();
-
-        if (user == tripCreator) {
-            throw new JoinRequestException("Creator added to the trip automatically.");
-        }
-
-        JoinRequest existingRequest = joinRequestDao.findByRequesterAndTrip(attendlist.getJoiner(), attendlist.getTrip());
-        if (existingRequest == null) {
-            throw new JoinRequestException("Joiner cannot be added to attendlist without join request.");
-        }
-
-        if (existingRequest.getStatus() != RequestStatus.APPROVED) {
-            throw new JoinRequestException("Joiner cannot be added to attendlist without approval.");
-        }
-
-        user.addAttendlist(attendlist);
-        userDao.update(user);
-    }
-
-    @Transactional
     public void leaveAttendlist(User user, Attendlist attendlist) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(attendlist);
@@ -175,7 +142,6 @@ public class UserService {
         userDao.update(user);
     }
 
-    @Transactional
     public void addJoinRequest(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         User requester = joinRequest.getRequester();
@@ -183,7 +149,6 @@ public class UserService {
         userDao.update(requester);
     }
 
-    @Transactional
     public void cancelJoinRequest(User user, JoinRequest joinRequest) {
         Objects.requireNonNull(user);
         Objects.requireNonNull(joinRequest);
@@ -192,22 +157,14 @@ public class UserService {
         joinRequestDao.remove(joinRequest);
     }
 
-    @Transactional
     public Long getId(String username) {
         return Long.valueOf(userDao.findByUsername(username).getId());
     }
 
-    @Transactional
     public boolean exists(String email) {
         return userDao.findByUsername(email) != null;
     }
 
-    @Transactional
-    public List<User> getAllJoinersOfAttendlistByID(Integer id) {
-        return userDao.getAllJoinersOfAttendlistByID(id);
-    }
-
-    @Transactional
     public void approveJoinRequest(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         User requester = joinRequest.getRequester();
@@ -224,22 +181,29 @@ public class UserService {
         userDao.update(requester);
     }
 
-    @Transactional
     public void rejectJoinRequest(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         joinRequest.setStatus(RequestStatus.REJECTED);
         joinRequestDao.update(joinRequest);
     }
 
-    @Transactional
     public void blockUser(User user) {
         user.setStatus(AccountStatus.BLOCKED);
         userDao.update(user);
     }
 
-    @Transactional
     public void unblockUser(User user) {
         user.setStatus(AccountStatus.ACTIVE);
+        userDao.update(user);
+    }
+
+    public List<User> getAllJoinersOfTrip(Trip trip) {
+        Objects.requireNonNull(trip);
+        return userDao.getAllJoinersOfAttendlistByTrip(trip);
+    }
+
+    public void setAdmin(User user) {
+        user.setRole(Role.ADMIN);
         userDao.update(user);
     }
 }

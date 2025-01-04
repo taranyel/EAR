@@ -4,13 +4,14 @@ import joinMe.db.entity.JoinRequest;
 import joinMe.db.entity.Role;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
+import joinMe.db.exception.JoinRequestException;
 import joinMe.db.exception.NotFoundException;
 import joinMe.rest.dto.JoinRequestDTO;
 import joinMe.rest.dto.Mapper;
-import joinMe.rest.dto.TripDTO;
 import joinMe.rest.util.RestUtils;
 import joinMe.security.model.UserDetails;
 import joinMe.service.JoinRequestService;
+import joinMe.service.TripService;
 import joinMe.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,27 +37,42 @@ public class JoinRequestController {
 
     private final UserService userService;
 
+    private final TripService tripService;
+
     private final Mapper mapper;
 
     @Autowired
-    public JoinRequestController(JoinRequestService joinRequestService, UserService userService, Mapper mapper) {
+    public JoinRequestController(JoinRequestService joinRequestService, UserService userService, Mapper mapper, TripService tripService) {
         this.joinRequestService = joinRequestService;
         this.userService = userService;
         this.mapper = mapper;
+        this.tripService = tripService;
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> createJoinRequest(Authentication auth, @RequestBody TripDTO tripDTO) {
+    @PreAuthorize("!anonymous")
+    @PostMapping(value = "/{tripID}")
+    public ResponseEntity<String> createJoinRequest(Authentication auth, @PathVariable int tripID) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
 
-        Trip trip = mapper.toEntity(tripDTO);
+        Trip trip = tripService.findByID(tripID);
 
-        JoinRequest joinRequest = joinRequestService.create(user, trip);
-        userService.addJoinRequest(joinRequest);
+        if (trip == null) {
+            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
+        }
 
-        final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", joinRequest.getId());
-        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+        try {
+            User.isBlocked(user);
+            JoinRequest joinRequest = joinRequestService.create(user, trip);
+            userService.addJoinRequest(joinRequest);
+
+            final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", joinRequest.getId());
+            return new ResponseEntity<>(headers, HttpStatus.CREATED);
+
+        } catch (JoinRequestException | AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
     }
 
     private JoinRequest getJoinRequestForRequester(User user, int id) {
@@ -84,63 +100,116 @@ public class JoinRequestController {
         return joinRequest;
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
+    @PreAuthorize("!anonymous")
     @DeleteMapping(value = "/{id}")
-    public void cancelJoinRequest(Authentication auth, @PathVariable int id) {
+    public ResponseEntity<String> cancelJoinRequest(Authentication auth, @PathVariable int id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
-        JoinRequest joinRequest = getJoinRequestForRequester(user, id);
-        userService.cancelJoinRequest(user, joinRequest);
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
+
+        try {
+            User.isBlocked(user);
+            JoinRequest joinRequest = getJoinRequestForRequester(user, id);
+            userService.cancelJoinRequest(user, joinRequest);
+            return new ResponseEntity<>("Join request was canceled.", HttpStatus.OK);
+
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
     }
 
+    @PreAuthorize("!anonymous")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<JoinRequestDTO> getAllJoinRequests(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
         return user.getJoinRequests()
                 .stream()
                 .map(mapper::toDto)
                 .toList();
     }
 
+    @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public JoinRequestDTO getJoinRequest(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
-        return mapper.toDto(getJoinRequestForRequester(user, id));
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
+
+        try {
+            return mapper.toDto(getJoinRequestForRequester(user, id));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
+    @PreAuthorize("!anonymous")
     @GetMapping(value = "/forApproval", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<JoinRequestDTO> getAllJoinRequestsForApproval(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
         return joinRequestService.getJoinRequestsForApproval(user)
                 .stream()
                 .map(mapper::toDto)
                 .toList();
     }
 
+    @PreAuthorize("!anonymous")
     @GetMapping(value = "/forApproval/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public JoinRequestDTO getJoinRequestForApprovalByID(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
-        JoinRequest joinRequest = getJoinRequestForApproval(user, id);
-        return mapper.toDto(joinRequest);
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
+
+        try {
+            JoinRequest joinRequest = getJoinRequestForApproval(user, id);
+            return mapper.toDto(joinRequest);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
+    @PreAuthorize("!anonymous")
     @GetMapping(value = "/approve/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void approveJoinRequest(Authentication auth, @PathVariable Integer id) {
+    public ResponseEntity<String> approveJoinRequest(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
-        JoinRequest joinRequest = getJoinRequestForApproval(user, id);
-        userService.approveJoinRequest(joinRequest);
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
+
+        try {
+            User.isBlocked(user);
+            JoinRequest joinRequest = getJoinRequestForApproval(user, id);
+            userService.approveJoinRequest(joinRequest);
+            return new ResponseEntity<>("Join request was approved.", HttpStatus.OK);
+
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
     }
 
+    @PreAuthorize("!anonymous")
     @GetMapping(value = "/reject/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void rejectJoinRequest(Authentication auth, @PathVariable Integer id) {
+    public ResponseEntity<String> rejectJoinRequest(Authentication auth, @PathVariable Integer id) {
         assert auth.getPrincipal() instanceof UserDetails;
-        User user = ((UserDetails) auth.getPrincipal()).getUser();
-        JoinRequest joinRequest = getJoinRequestForApproval(user, id);
-        userService.rejectJoinRequest(joinRequest);
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
+
+        try {
+            User.isBlocked(user);
+            JoinRequest joinRequest = getJoinRequestForApproval(user, id);
+            userService.rejectJoinRequest(joinRequest);
+            return new ResponseEntity<>("Join request was rejected.", HttpStatus.OK);
+
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
     }
 }

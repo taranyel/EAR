@@ -1,5 +1,6 @@
 package joinMe.db.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -39,6 +40,7 @@ public abstract class Address extends AbstractEntity {
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "address_id")
     @Builder.Default
+    @JsonIgnore
     private List<User> residents = new ArrayList<>();
 
     public void addResident(User resident) {

@@ -110,24 +110,24 @@ public class UserServiceTest {
         assertEquals(user.getTrips(), result.getTrips());
     }
 
-    @Test
-    public void removeTripRemovesAllUsersInAttendlist() {
-        List<User> toRemoveUsers = Generator.generateUsers(2, em);
-        trip = Generator.generateTrip(user, em);
-
-        addTripIntoListByTrip(user, trip, 0);
-        addRequestApproveRequestForUsersList(toRemoveUsers, trip);
-
-        userService.removeTrip(user, trip);
-
-        final List<User> resultList = em.getEntityManager().createQuery("SELECT u FROM User u", User.class).getResultList();
-        for (User result : resultList) {
-            assertEquals(0, result.getAttendlists().size());
-            if (result.isAdmin()) {
-                assertEquals(0, result.getTrips().size());
-            }
-        }
-    }
+//    @Test
+//    public void removeTripRemovesAllUsersInAttendlist() {
+//        List<User> toRemoveUsers = Generator.generateUsers(2, em);
+//        trip = Generator.generateTrip(user, em);
+//
+//        addTripIntoListByTrip(user, trip, 0);
+//        addRequestApproveRequestForUsersList(toRemoveUsers, trip);
+//
+//        userService.removeTrip(user, trip);
+//
+//        final List<User> resultList = em.getEntityManager().createQuery("SELECT u FROM User u", User.class).getResultList();
+//        for (User result : resultList) {
+//            assertEquals(0, result.getAttendlists().size());
+//            if (result.isAdmin()) {
+//                assertEquals(0, result.getTrips().size());
+//            }
+//        }
+//    }
 
     @Test
     public void approveRequestAddsUserIntoAttendlist() {

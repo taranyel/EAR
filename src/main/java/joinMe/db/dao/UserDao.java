@@ -39,13 +39,4 @@ public class UserDao extends BaseDao<User>{
             return null;
         }
     }
-
-    public List<User> getAllJoinersOfAttendlistByID(Integer id) {
-        try {
-            return em.createNamedQuery("User.getAllJoinersOfAttendlistById", User.class).setParameter("id", id)
-                    .getResultList();
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
 }

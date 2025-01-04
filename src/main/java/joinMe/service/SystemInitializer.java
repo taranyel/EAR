@@ -3,7 +3,6 @@ package joinMe.service;
 import jakarta.annotation.PostConstruct;
 import joinMe.db.entity.Address;
 import joinMe.db.entity.Flat;
-import joinMe.db.entity.Role;
 import joinMe.db.entity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,13 +57,13 @@ public class SystemInitializer {
         }
         User admin = createUser();
         Address address = createAddress();
-        addressService.persist(address);
 
         admin.setAddress(address);
         userService.persist(admin);
+        userService.setAdmin(admin);
         addressService.addResident(address, admin);
 
-        LOG.info("Generated admin user with credentials " + admin.getUsername() + "/" + admin.getPassword());
+        LOG.info("Generated admin user with credentials {}/{}", admin.getUsername(), admin.getPassword());
     }
 
     private Address createAddress() {
@@ -84,7 +83,6 @@ public class SystemInitializer {
                 .firstName("System")
                 .lastName("Administrator")
                 .password("admin")
-                .role(Role.ADMIN)
                 .imagePath("path")
                 .birthdate(LocalDate.of(2004, Month.APRIL, 5))
                 .build();

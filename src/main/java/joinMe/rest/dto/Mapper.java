@@ -3,6 +3,7 @@ package joinMe.rest.dto;
 import joinMe.db.entity.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -68,7 +69,7 @@ public class Mapper {
     }
 
     public AttendlistDTO toDto(Attendlist attendlist) {
-        return AttendlistDTO.builder()
+          return AttendlistDTO.builder()
                 .id(attendlist.getId())
                 .joiner(toDto(attendlist.getJoiner()))
                 .trip(toDto(attendlist.getTrip()))
@@ -104,9 +105,9 @@ public class Mapper {
     public MessageDTO toDto(Message message) {
         return MessageDTO.builder()
                 .id(message.getId())
-                .attendlist(toDto(message.getAttendlist()))
                 .author(toDto(message.getAuthor()))
                 .text(message.getText())
+                .time(message.getTime())
                 .build();
     }
 
@@ -134,6 +135,7 @@ public class Mapper {
 
     public User toEntity(UserDTO userDTO) {
         return User.builder()
+                .id(userDTO.getId())
                 .address(toEntity(userDTO.getAddress()))
                 .status(userDTO.getStatus())
                 .rating(userDTO.getRating())
@@ -143,7 +145,6 @@ public class Mapper {
                 .imagePath(userDTO.getImagePath())
                 .lastName(userDTO.getLastName())
                 .rating(userDTO.getRating())
-                .role(userDTO.getRole())
                 .username(userDTO.getUsername())
                 .password(userDTO.getPassword())
                 .build();
@@ -151,6 +152,7 @@ public class Mapper {
 
     public Trip toEntity(TripDTO tripDTO) {
         return Trip.builder()
+                .id(tripDTO.getId())
                 .startDate(tripDTO.getStartDate())
                 .endDate(tripDTO.getEndDate())
                 .capacity(tripDTO.getCapacity())
@@ -161,26 +163,17 @@ public class Mapper {
                 .build();
     }
 
-    public Attendlist toEntity(AttendlistDTO attendlistDTO) {
-        List<Message> messages = attendlistDTO.getMessages()
-                .stream()
-                .map(this::toEntity)
-                .toList();
-
-        return Attendlist.builder()
-                .id(attendlistDTO.getId())
-                .trip(toEntity(attendlistDTO.getTrip()))
-                .messages(messages)
-                .joiner(toEntity(attendlistDTO.getJoiner()))
-                .build();
-    }
-
     public Message toEntity(MessageDTO messageDTO) {
+        LocalDateTime time = LocalDateTime.now();
+
+        if (messageDTO.getTime() != null) {
+            time = messageDTO.getTime();
+        }
+
         return Message.builder()
                 .id(messageDTO.getId())
                 .text(messageDTO.getText())
-                .author(toEntity(messageDTO.getAuthor()))
-                .attendlist(toEntity(messageDTO.getAttendlist()))
+                .time(time)
                 .build();
     }
 
@@ -198,14 +191,6 @@ public class Mapper {
                 .id(complaintDTO.getId())
                 .accused(toEntity(complaintDTO.getAccused()))
                 .description(complaintDTO.getDescription())
-                .build();
-    }
-
-    public Wishlist toEntity(WishlistDTO wishlistDTO) {
-        return Wishlist.builder()
-                .id(wishlistDTO.getId())
-                .owner(toEntity(wishlistDTO.getOwner()))
-                .trip(toEntity(wishlistDTO.getTrip()))
                 .build();
     }
 }

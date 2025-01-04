@@ -3,6 +3,7 @@ package joinMe.environment;
 import joinMe.db.entity.*;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -68,7 +69,7 @@ public class Generator {
         user.setPassword(Integer.toString(randomInt()));
         user.setStatus(AccountStatus.ACTIVE);
         user.setEmail(randomString());
-        user.setBirthdate(new Date());
+        user.setBirthdate(LocalDate.now());
         user.setRating(0);
 
         return user;
@@ -85,12 +86,31 @@ public class Generator {
         user.setAddress(flat);
         user.setStatus(AccountStatus.ACTIVE);
         user.setEmail(randomString());
-        user.setBirthdate(new Date());
+        user.setBirthdate(LocalDate.now());
         user.setRating(0);
         flat.addResident(user);
 
         em.persist(user.getAddress());
         em.persist(user);
+        return user;
+    }
+
+    public static User generateUser() {
+        final User user = new User();
+        final Address flat = generateAddress();
+
+        user.setFirstName("FirstName" + randomInt());
+        user.setLastName("LastName" + randomInt());
+        user.setUsername(randomString());
+        user.setPassword(Integer.toString(randomInt()));
+        user.setAddress(flat);
+        user.setStatus(AccountStatus.ACTIVE);
+        user.setEmail(randomString());
+        user.setBirthdate(LocalDate.now());
+        user.setRating(0);
+        user.setImagePath(randomString());
+        flat.addResident(user);
+
         return user;
     }
 
@@ -110,8 +130,8 @@ public class Generator {
         t.setDescription(randomString());
         t.setImagePath(randomString());
         t.setCapacity(randomInt());
-        t.setStartDate(new Date());
-        t.setEndDate(new Date());
+        t.setStartDate(LocalDate.now());
+        t.setEndDate(LocalDate.now());
         t.setCreated(LocalDateTime.now());
 
         em.persist(t);

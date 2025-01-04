@@ -134,9 +134,4 @@ public class TripService {
     public Trip findByID(Integer id) {
         return tripDao.find(id);
     }
-
-    public User getAuthor(Trip trip) {
-        Objects.requireNonNull(trip);
-        return trip.getAuthor();
-    }
 }

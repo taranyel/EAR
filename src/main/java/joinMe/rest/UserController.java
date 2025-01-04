@@ -1,7 +1,6 @@
 package joinMe.rest;
 
 import joinMe.db.entity.User;
-import joinMe.db.exception.NotFoundException;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.UserDTO;
 import joinMe.rest.util.RestUtils;
@@ -19,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/users")
@@ -42,41 +42,94 @@ public class UserController {
      * @param userDTO User data
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> register(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<String> register(@RequestBody UserDTO userDTO) {
         User user = mapper.toEntity(userDTO);
 
-        userService.persist(user);
-        LOG.debug("User {} successfully registered.", userDTO);
-        final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
-        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+        try {
+            userService.persist(user);
+            LOG.debug("User {} successfully registered.", userDTO);
+            final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
+            return new ResponseEntity<>(headers, HttpStatus.CREATED);
+
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
+    @PreAuthorize("!anonymous")
     @PutMapping(value = "/current", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void updateUser(Authentication auth, @RequestBody UserDTO userDTO) throws AccessDeniedException {
+    public ResponseEntity<String> updateUser(Authentication auth, @RequestBody UserDTO userDTO) {
         assert auth.getPrincipal() instanceof UserDetails;
         final User user = ((UserDetails) auth.getPrincipal()).getUser();
-
         User userToUpdate = mapper.toEntity(userDTO);
-        userService.update(user, userToUpdate);
-        LOG.info("Updated user {}.", userDTO);
+
+        if (!Objects.equals(user.getId(), userDTO.getId())) {
+            return new ResponseEntity<>("Cannot change data of another user.", HttpStatus.FORBIDDEN);
+        }
+
+        try {
+            userService.update(user, userToUpdate);
+            LOG.info("Updated user {}.", userDTO);
+            return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
+        } catch (AccessDeniedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST')")
+    @PreAuthorize("!anonymous")
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserDTO getCurrent(Authentication auth) {
         assert auth.getPrincipal() instanceof UserDetails;
-        return mapper.toDto(((UserDetails) auth.getPrincipal()).getUser());
+        final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
+        User user = userService.findByID(userId);
+        return mapper.toDto(user);
     }
 
-    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public void deleteUser(@PathVariable Integer id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Integer id) {
         User user = userService.findByID(id);
 
         if (user == null) {
-            throw NotFoundException.create("User", id);
+            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
         }
         userService.remove(user);
+        return new ResponseEntity<>("User was successfully deleted.", HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/{id}/admin")
+    public ResponseEntity<String> makeAdmin(@PathVariable Integer id) {
+        User user = userService.findByID(id);
+
+        if (user == null) {
+            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+        }
+        userService.setAdmin(user);
+        return new ResponseEntity<>("New admin was successfully set.", HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/{id}/block")
+    public ResponseEntity<String> blockUser(@PathVariable Integer id) {
+        User user = userService.findByID(id);
+
+        if (user == null) {
+            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+        }
+        userService.blockUser(user);
+        return new ResponseEntity<>("User was blocked", HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/{id}/unblock")
+    public ResponseEntity<String> unblockUser(@PathVariable Integer id) {
+        User user = userService.findByID(id);
+
+        if (user == null) {
+            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+        }
+        userService.unblockUser(user);
+        return new ResponseEntity<>("User was unblocked", HttpStatus.OK);
     }
 }

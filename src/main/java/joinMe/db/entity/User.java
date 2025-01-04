@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import joinMe.util.Constants;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
@@ -23,7 +24,6 @@ import java.util.Objects;
         @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username"),
         @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email = :email"),
         @NamedQuery(name = "User.getAllJoinersOfAttendlistByTrip", query = "SELECT a.joiner FROM Attendlist a WHERE a.trip = :trip"),
-        @NamedQuery(name = "User.getAllJoinersOfAttendlistById", query = "SELECT a.joiner FROM Attendlist a WHERE a.id = :id")
 })
 public class User extends AbstractEntity {
 
@@ -103,10 +103,6 @@ public class User extends AbstractEntity {
         this.password = encoder.encode(password);
     }
 
-    public void erasePassword() {
-        this.password = null;
-    }
-
     public void addTrip(Trip trip) {
         Objects.requireNonNull(trip);
         trips.add(trip);
@@ -155,5 +151,11 @@ public class User extends AbstractEntity {
     public void removeJoinRequest(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         joinRequests.remove(joinRequest);
+    }
+
+    public static void isBlocked(User user) throws AccessDeniedException {
+        if (user.getStatus() == AccountStatus.BLOCKED) {
+            throw new AccessDeniedException("Your account is blocked.");
+        }
     }
 }
