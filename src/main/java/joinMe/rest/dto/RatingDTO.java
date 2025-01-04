@@ -1,6 +1,6 @@
 package joinMe.rest.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class RatingDTO {
-    @NotBlank(message = "Rating must not be blank")
+    @NotNull(message = "Rating must not be blank")
     private Integer rating;
     private String comment;
 }

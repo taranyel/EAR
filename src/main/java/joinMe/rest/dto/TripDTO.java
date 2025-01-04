@@ -23,7 +23,7 @@ public class TripDTO {
     @NotBlank(message = "Description must not be blank")
     private String description;
     private UserDTO author;
-    @NotBlank(message = "Capacity must not be blank")
+    @NotNull(message = "Capacity must not be blank")
     private Integer capacity;
     @NotBlank(message = "Country must not be blank")
     private String country;
