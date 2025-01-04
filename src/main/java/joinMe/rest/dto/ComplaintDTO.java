@@ -1,5 +1,6 @@
 package joinMe.rest.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 public class ComplaintDTO {
     private Integer id;
     private UserDTO accused;
+    @NotBlank(message = "Description must not be blank")
     private String description;
     private LocalDateTime time;
 }

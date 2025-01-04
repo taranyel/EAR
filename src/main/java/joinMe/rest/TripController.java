@@ -1,5 +1,6 @@
 package joinMe.rest;
 
+import jakarta.validation.Valid;
 import joinMe.db.entity.*;
 import joinMe.db.exception.NotFoundException;
 import joinMe.rest.dto.CommentDTO;
@@ -54,7 +55,7 @@ public class TripController {
     @PreAuthorize("!anonymous")
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<String> updateTrip(Authentication auth, @PathVariable Integer id, @RequestBody TripDTO tripDTO) {
+    public ResponseEntity<String> updateTrip(Authentication auth, @PathVariable Integer id, @Valid @RequestBody TripDTO tripDTO) {
         if (tripDTO == null) {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
@@ -94,7 +95,7 @@ public class TripController {
 
     @PreAuthorize("!anonymous")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createTrip(Authentication auth, @RequestBody TripDTO tripDTO) {
+    public ResponseEntity<String> createTrip(Authentication auth, @Valid @RequestBody TripDTO tripDTO) {
         if (tripDTO == null) {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
@@ -222,7 +223,7 @@ public class TripController {
 
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addComment(Authentication auth, @PathVariable Integer tripID, @RequestBody CommentDTO commentDTO) {
+    public ResponseEntity<String> addComment(Authentication auth, @PathVariable Integer tripID, @Valid @RequestBody CommentDTO commentDTO) {
         if (commentDTO == null) {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }

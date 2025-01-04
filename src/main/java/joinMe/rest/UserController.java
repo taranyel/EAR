@@ -2,8 +2,10 @@ package joinMe.rest;
 
 import jakarta.validation.Valid;
 import joinMe.db.entity.Address;
+import joinMe.db.entity.Rating;
 import joinMe.db.entity.User;
 import joinMe.rest.dto.Mapper;
+import joinMe.rest.dto.RatingDTO;
 import joinMe.rest.dto.RegisterDTO;
 import joinMe.rest.dto.UserDTO;
 import joinMe.rest.util.RestUtils;
@@ -42,7 +44,7 @@ public class UserController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterDTO registerDTO, Authentication auth) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterDTO registerDTO) {
         if (registerDTO.getUser() == null || registerDTO.getAddress() == null) {
             LOG.warn("Data is missing.");
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
@@ -50,21 +52,20 @@ public class UserController {
 
         User user = mapper.toEntity(registerDTO.getUser());
 
-        ResponseEntity<String> result = userService.checkAuthRole(auth, user, "registration", LOG);
-        if (result != null) {
-            return result;
-        }
-
         Address address = mapper.toEntity(registerDTO.getAddress());
         addressService.setAddress(address, user);
 
-        userService.persist(user);
-        LOG.info("User \"{}\" successfully registered.", user.getUsername());
-        final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
-        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+        try {
+            userService.persist(user);
+            LOG.info("User \"{}\" successfully registered.", user.getUsername());
+            final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/current");
+            return new ResponseEntity<>(headers, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
-//    @PreAuthorize("!anonymous")
+    @PreAuthorize("!anonymous")
     @PutMapping(value = "/current", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateUser(Authentication auth, @Valid @RequestBody UserDTO userDTO) {
         if (userDTO == null) {
@@ -74,19 +75,19 @@ public class UserController {
         User user = userService.getCurrent(auth);
         User userToUpdate = mapper.toEntity(userDTO);
 
-        ResponseEntity<String> result = userService.checkAuthRole(auth, userToUpdate, "update", LOG);
-        if (result != null) {
-            return result;
-        }
-
-        if (!userService.isAdmin(user) && !Objects.equals(user.getId(), userDTO.getId())) {
+        if (!userService.isAdmin(user) && !Objects.equals(user.getId(), userToUpdate.getId())) {
             LOG.warn("Cannot change data of another user.");
             return new ResponseEntity<>("Cannot change data of another user.", HttpStatus.FORBIDDEN);
         }
 
-        userService.update(user, userToUpdate);
-        LOG.info("User \"{}\" was successfully updated.", userToUpdate.getUsername());
-        return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
+        try {
+            userService.update(user, userToUpdate);
+            LOG.info("User \"{}\" was successfully updated.", userToUpdate.getUsername());
+            return new ResponseEntity<>("User was successfully updated.", HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PreAuthorize("!anonymous")
@@ -107,7 +108,21 @@ public class UserController {
         return mapper.forOthers(user);
     }
 
+    @PreAuthorize("!anonymous")
+    @PostMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> rateUser(@PathVariable Integer id, @RequestBody RatingDTO ratingDTO) {
+        User user = userService.findByID(id);
 
+        if (user == null) {
+            LOG.warn("User with id: {} was not found.", id);
+            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+        }
+
+        Rating rating = mapper.toEntity(ratingDTO);
+        userService.addRating(user, rating);
+
+        return new ResponseEntity<>("User was rated.", HttpStatus.OK);
+    }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{id}")

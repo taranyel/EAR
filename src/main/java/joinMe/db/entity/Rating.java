@@ -1,7 +1,6 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
-import joinMe.rest.dto.UserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,8 +20,8 @@ public class Rating extends AbstractEntity {
     private Integer rating;
 
     @Basic
-    @Column(name = "text", nullable = false)
-    private String text;
+    @Column(name = "comment", nullable = false)
+    private String comment;
 
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn

@@ -61,10 +61,10 @@ public class User extends AbstractEntity {
     @Column(name = "birthdate", nullable = false)
     private LocalDate birthdate;
 
-    @Basic(optional = false)
-    @Column(name = "rating", nullable = false)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
-    private Integer rating = 0;
+    @JsonIgnore
+    private List<Rating> ratings = new ArrayList<>();
 
     @Column(name = "image_path")
     private String imagePath;
@@ -149,6 +149,11 @@ public class User extends AbstractEntity {
         joinRequests.add(joinRequest);
     }
 
+    public void addRating(Rating rating) {
+        Objects.requireNonNull(rating);
+        ratings.add(rating);
+    }
+
     public void removeJoinRequest(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         joinRequests.remove(joinRequest);
@@ -158,5 +163,16 @@ public class User extends AbstractEntity {
         if (user.getStatus() == AccountStatus.BLOCKED) {
             throw new AccessDeniedException("Your account is blocked.");
         }
+    }
+
+    public Integer getAverageRating() {
+        if (ratings.isEmpty()) {
+            return 0;
+        }
+        int sum = 0;
+        for (Rating rating : ratings) {
+            sum += rating.getRating();
+        }
+        return sum / ratings.size();
     }
 }

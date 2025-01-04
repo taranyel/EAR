@@ -49,7 +49,7 @@ public class JoinRequestController {
 
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{tripID}")
-    public ResponseEntity<String> createJoinRequest(Authentication auth, @PathVariable int tripID) {
+    public ResponseEntity<String> createJoinRequest(Authentication auth, @PathVariable Integer tripID) {
         User user = userService.getCurrent(auth);
 
         Trip trip = tripService.findByID(tripID);
@@ -98,7 +98,7 @@ public class JoinRequestController {
 
     @PreAuthorize("!anonymous")
     @DeleteMapping(value = "/{id}")
-    public ResponseEntity<String> cancelJoinRequest(Authentication auth, @PathVariable int id) {
+    public ResponseEntity<String> cancelJoinRequest(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
 
         try {
@@ -126,7 +126,7 @@ public class JoinRequestController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public JoinRequestDTO getJoinRequest(Authentication auth, @PathVariable int id) {
+    public JoinRequestDTO getJoinRequest(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
         try {
             return mapper.toDto(getJoinRequestForRequester(user, id));
@@ -147,7 +147,7 @@ public class JoinRequestController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/forApproval/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public JoinRequestDTO getJoinRequestForApprovalByID(Authentication auth, @PathVariable int id) {
+    public JoinRequestDTO getJoinRequestForApprovalByID(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
         try {
             JoinRequest joinRequest = getJoinRequestForApproval(user, id);
@@ -159,7 +159,7 @@ public class JoinRequestController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/approve/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> approveJoinRequest(Authentication auth, @PathVariable int id) {
+    public ResponseEntity<String> approveJoinRequest(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
         try {
             User.isBlocked(user);

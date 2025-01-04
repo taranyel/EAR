@@ -1,5 +1,6 @@
 package joinMe.rest;
 
+import jakarta.validation.Valid;
 import joinMe.db.entity.Address;
 import joinMe.db.entity.User;
 import joinMe.rest.dto.AddressDTO;
@@ -40,7 +41,7 @@ public class AddressController {
     @PreAuthorize("!anonymous")
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<String> changeAddress(Authentication auth, @RequestBody AddressDTO addressDTO) {
+    public ResponseEntity<String> changeAddress(Authentication auth,@Valid @RequestBody AddressDTO addressDTO) {
         if (addressDTO == null) {
             return new ResponseEntity<>("Data is missing", HttpStatus.BAD_REQUEST);
         }
@@ -76,7 +77,7 @@ public class AddressController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{addressID}/residents", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<UserDTO> getAllResidents(@PathVariable int addressID) {
+    public List<UserDTO> getAllResidents(@PathVariable Integer addressID) {
         LOG.info("Retrieving all residents.");
         Address address = addressService.findByID(addressID);
 

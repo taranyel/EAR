@@ -93,7 +93,7 @@ public class WishlistController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public TripDTO getWishlist(Authentication auth, @PathVariable int id) {
+    public TripDTO getWishlist(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
         try {
             return mapper.toDto(getWishlist(id, user).getTrip());

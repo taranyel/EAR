@@ -1,5 +1,6 @@
 package joinMe.rest;
 
+import jakarta.validation.Valid;
 import joinMe.db.entity.Attendlist;
 import joinMe.db.entity.Message;
 import joinMe.db.entity.Trip;
@@ -20,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -93,7 +93,7 @@ public class AttendlistController {
 
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addMessage(Authentication auth, @PathVariable int tripID, @RequestBody MessageDTO messageDTO) {
+    public ResponseEntity<String> addMessage(Authentication auth, @PathVariable Integer tripID, @Valid @RequestBody MessageDTO messageDTO) {
         if (messageDTO == null) {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
@@ -180,18 +180,5 @@ public class AttendlistController {
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
-    }
-
-    private Attendlist getAttendlist(User user, int id) {
-        Attendlist attendlist = attendlistService.findByID(id);
-        if (attendlist == null) {
-            throw NotFoundException.create("Attendlist", id);
-        }
-
-        if (!attendlist.getJoiner().getId().equals(user.getId())) {
-            throw new AccessDeniedException("Cannot access attend list of another user.");
-        }
-
-        return attendlist;
     }
 }

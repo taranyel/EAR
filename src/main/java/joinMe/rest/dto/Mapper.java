@@ -33,10 +33,24 @@ public class Mapper {
                 .build();
     }
 
+    public RatingDTO toDto(Rating rating) {
+        return RatingDTO.builder()
+                .rating(rating.getRating())
+                .comment(rating.getComment())
+                .build();
+    }
+
     public UserDTO forOthers(User user) {
+        List<RatingDTO> ratings = user
+                .getRatings()
+                .stream()
+                .map(this::toDto)
+                .toList();
+
         return UserDTO.builder()
                 .id(user.getId())
-                .rating(user.getRating())
+                .averageRating(user.getAverageRating())
+                .ratings(ratings)
                 .firstName(user.getFirstName())
                 .birthDate(user.getBirthdate())
                 .lastName(user.getLastName())
@@ -46,12 +60,19 @@ public class Mapper {
     }
 
     public UserDTO toDto(User user) {
+        List<RatingDTO> ratings = user
+                .getRatings()
+                .stream()
+                .map(this::toDto)
+                .toList();
+
         return UserDTO.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .role(user.getRole())
                 .status(user.getStatus())
-                .rating(user.getRating())
+                .averageRating(user.getAverageRating())
+                .ratings(ratings)
                 .firstName(user.getFirstName())
                 .birthDate(user.getBirthdate())
                 .lastName(user.getLastName())
@@ -155,7 +176,6 @@ public class Mapper {
                 .lastName(userDTO.getLastName())
                 .username(userDTO.getUsername())
                 .password(userDTO.getPassword())
-                .role(userDTO.getRole())
                 .build();
     }
 
@@ -183,6 +203,13 @@ public class Mapper {
                 .id(messageDTO.getId())
                 .text(messageDTO.getText())
                 .time(time)
+                .build();
+    }
+
+    public Rating toEntity(RatingDTO ratingDTO) {
+        return Rating.builder()
+                .comment(ratingDTO.getComment())
+                .rating(ratingDTO.getRating())
                 .build();
     }
 

@@ -9,8 +9,6 @@ import joinMe.db.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -101,30 +99,6 @@ public class TripService {
     public List<Trip> findByAuthor(User user) {
         Objects.requireNonNull(user);
         return tripDao.findByAuthor(user);
-    }
-
-    @Transactional
-    public List<Trip> findByCountry(String country) {
-        Objects.requireNonNull(country);
-        return tripDao.findByCountry(country);
-    }
-
-    @Transactional
-    public List<Trip> findByStartDate(LocalDate startDate) {
-        Objects.requireNonNull(startDate);
-        return tripDao.findByStartDate(startDate);
-    }
-
-    @Transactional
-    public List<Trip> findByEndDate(Date endDate) {
-        Objects.requireNonNull(endDate);
-        return tripDao.findByEndDate(endDate);
-    }
-
-    @Transactional
-    public List<Trip> findByCapacity(Integer capacity) {
-        Objects.requireNonNull(capacity);
-        return tripDao.findByCapacity(capacity);
     }
 
     @Transactional

@@ -1,6 +1,5 @@
 package joinMe.rest.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import joinMe.db.entity.AccountStatus;
@@ -27,11 +26,13 @@ public class UserDTO {
     @Email(message = "Invalid email format")
     private String email;
     private Role role;
+    @NotBlank(message = "Birth date must not be blank")
     private LocalDate birthDate;
     @NotBlank(message = "Username must not be blank")
     private String username;
     private AccountStatus status;
-    private Integer rating;
+    private Integer averageRating;
+    private List<RatingDTO> ratings;
     private String imagePath;
     @NotBlank(message = "Password must not be blank")
     private String password;

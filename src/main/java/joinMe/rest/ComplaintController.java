@@ -1,5 +1,6 @@
 package joinMe.rest;
 
+import jakarta.validation.Valid;
 import joinMe.db.entity.Complaint;
 import joinMe.db.entity.User;
 import joinMe.rest.dto.ComplaintDTO;
@@ -41,7 +42,7 @@ public class ComplaintController {
 
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{accusedID}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createComplaint(@PathVariable Integer accusedID, @RequestBody ComplaintDTO complaintDTO) {
+    public ResponseEntity<String> createComplaint(@PathVariable Integer accusedID, @Valid @RequestBody ComplaintDTO complaintDTO) {
         if (complaintDTO == null) {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
@@ -72,7 +73,7 @@ public class ComplaintController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @DeleteMapping(value = "/{id}")
-    public ResponseEntity<String> deleteComplaint(Authentication auth, @PathVariable int id) {
+    public ResponseEntity<String> deleteComplaint(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
 
         Complaint complaint = complaintService.findByID(id);
