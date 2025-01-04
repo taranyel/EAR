@@ -161,7 +161,7 @@ public class AttendlistController {
         if (!Objects.equals(currentUser.getId(), toLeave.getId()) && !Objects.equals(currentUser.getId(), trip.getAuthor().getId())) {
             return new ResponseEntity<>("To remove other user from chat you need to be admin of this chat.", HttpStatus.FORBIDDEN);
         } else if (currentUser.getId().equals(toLeave.getId()) && Objects.equals(trip.getAuthor().getId(), currentUser.getId())) {
-            return new ResponseEntity<>("Admin cannot leave chat he is admin of.", HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>("Admin cannot leave chat.", HttpStatus.FORBIDDEN);
         }
 
         try {
