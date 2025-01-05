@@ -1,32 +1,30 @@
 package joinMe.db.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import joinMe.util.Constants;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Setter
 @Getter
 @Entity
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "EAR_USER")
 @NamedQueries({
         @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username"),
-        @NamedQuery(name = "User.getAllJoinersOfAttendlist", query = "SELECT a.joiner FROM Attendlist a WHERE a.trip = :trip"),
+        @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email = :email"),
+        @NamedQuery(name = "User.getAllJoinersOfAttendlistByTrip", query = "SELECT a.joiner FROM Attendlist a WHERE a.trip = :trip"),
 })
 public class User extends AbstractEntity {
-
-    public User() {
-        trips = new ArrayList<>();
-        role = Constants.DEFAULT_ROLE;
-        status = Constants.DEFAULT_ACCOUNT_STATUS;
-        wishlists = new ArrayList<>();
-        complaints = new ArrayList<>();
-        attendlists = new ArrayList<>();
-        joinRequests = new ArrayList<>();
-    }
 
     @Basic(optional = false)
     @Column(name = "first_name", nullable = false)
@@ -50,53 +48,59 @@ public class User extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
-    private Role role;
+    @Builder.Default
+    private Role role = Constants.DEFAULT_ROLE;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private AccountStatus status;
+    @Builder.Default
+    private AccountStatus status = Constants.DEFAULT_ACCOUNT_STATUS;
 
     @Basic(optional = false)
     @Column(name = "birthdate", nullable = false)
-    private Date birthdate;
+    private LocalDate birthdate;
 
-    @Basic(optional = false)
-    @Column(name = "rating", nullable = false)
-    private Integer rating;
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    @JsonIgnore
+    private List<Rating> ratings = new ArrayList<>();
 
     @Column(name = "image_path")
     private String imagePath;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn
+    @JsonIgnore
     private Address address;
 
-    @OneToMany(mappedBy = "accused")
-    private List<Complaint> complaints;
+    @OneToMany(mappedBy = "accused", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    @JsonIgnore
+    private List<Complaint> complaints = new ArrayList<>();
 
-    @OneToMany(mappedBy = "joiner")
-    private List<Attendlist> attendlists;
+    @OneToMany(mappedBy = "joiner", fetch = FetchType.EAGER)
+    @Builder.Default
+    @JsonIgnore
+    private List<Attendlist> attendlists = new ArrayList<>();
 
-    @OneToMany(mappedBy = "author")
+    @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("created")
-    private List<Trip> trips;
+    @Builder.Default
+    @JsonIgnore
+    private List<Trip> trips = new ArrayList<>();
 
-    @OneToMany(mappedBy = "owner")
-    private List<Wishlist> wishlists;
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    @JsonIgnore
+    private List<Wishlist> wishlists = new ArrayList<>();
 
-    @OneToMany(mappedBy = "requester")
-    private List<JoinRequest> joinRequests;
+    @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    @JsonIgnore
+    private List<JoinRequest> joinRequests = new ArrayList<>();
 
     public void encodePassword(PasswordEncoder encoder) {
         this.password = encoder.encode(password);
-    }
-
-    public void erasePassword() {
-        this.password = null;
-    }
-
-    public boolean isAdmin() {
-        return role == Role.ADMIN;
     }
 
     public void addTrip(Trip trip) {
@@ -144,8 +148,38 @@ public class User extends AbstractEntity {
         joinRequests.add(joinRequest);
     }
 
+    public void addRating(Rating rating) {
+        Objects.requireNonNull(rating);
+        ratings.add(rating);
+    }
+
     public void removeJoinRequest(JoinRequest joinRequest) {
         Objects.requireNonNull(joinRequest);
         joinRequests.remove(joinRequest);
+    }
+
+    public Integer getAverageRating() {
+        if (ratings.isEmpty()) {
+            return 0;
+        }
+        int sum = 0;
+        for (Rating rating : ratings) {
+            sum += rating.getRating();
+        }
+        return sum / ratings.size();
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "\n address=" + address +
+                ",\n firstName='" + firstName + '\'' +
+                ",\n lastName='" + lastName + '\'' +
+                ",\n username='" + username + '\'' +
+                ",\n email='" + email + '\'' +
+                ",\n status=" + status +
+                ",\n birthdate=" + birthdate +
+                ",\n ratings=" + ratings +
+                "\n}";
     }
 }

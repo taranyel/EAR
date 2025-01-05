@@ -1,5 +1,8 @@
 package joinMe.db.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum AccountStatus {
     ACTIVE("ACTIVE"), BLOCKED("BLOCKED");
 

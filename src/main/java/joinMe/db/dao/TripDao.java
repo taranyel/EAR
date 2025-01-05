@@ -6,6 +6,7 @@ import joinMe.db.entity.TripStatus;
 import joinMe.db.entity.User;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class TripDao extends BaseDao<Trip> {
         }
     }
 
-    public List<Trip> findByStartDate(Date startDate) {
+    public List<Trip> findByStartDate(LocalDate startDate) {
         try {
             return em.createNamedQuery("Trip.findByStartDate", Trip.class).setParameter("startDate", startDate)
                     .getResultList();
@@ -63,15 +64,6 @@ public class TripDao extends BaseDao<Trip> {
     public List<Trip> findByAuthor(User author) {
         try {
             return em.createNamedQuery("Trip.findByAuthor", Trip.class).setParameter("author", author)
-                    .getResultList();
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
-
-    public List<Trip> findInWishlistByOwner(User owner) {
-        try {
-            return em.createNamedQuery("Trip.findInWishlistByOwner", Trip.class).setParameter("owner", owner)
                     .getResultList();
         } catch (NoResultException e) {
             return null;

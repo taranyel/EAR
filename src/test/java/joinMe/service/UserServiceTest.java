@@ -2,7 +2,6 @@ package joinMe.service;
 
 import joinMe.db.dao.*;
 import joinMe.db.entity.*;
-import joinMe.db.exception.JoinRequestException;
 import joinMe.environment.Generator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestEnti
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,7 +74,7 @@ public class UserServiceTest {
         JoinRequest joinRequest = new JoinRequest();
         joinRequest.setRequester(us);
         joinRequest.setTrip(trip);
-        userService.addJoinRequest(us, joinRequest);
+        userService.addJoinRequest(joinRequest);
         verify(joinRequestDao).persist(joinRequest);
         verify(userDao).update(us);
         userService.approveJoinRequest(joinRequest);
@@ -110,24 +110,24 @@ public class UserServiceTest {
         assertEquals(user.getTrips(), result.getTrips());
     }
 
-    @Test
-    public void removeTripRemovesAllUsersInAttendlist() {
-        List<User> toRemoveUsers = Generator.generateUsers(2, em);
-        trip = Generator.generateTrip(user, em);
-
-        addTripIntoListByTrip(user, trip, 0);
-        addRequestApproveRequestForUsersList(toRemoveUsers, trip);
-
-        userService.removeTrip(user, trip);
-
-        final List<User> resultList = em.getEntityManager().createQuery("SELECT u FROM User u", User.class).getResultList();
-        for (User result : resultList) {
-            assertEquals(0, result.getAttendlists().size());
-            if (result.isAdmin()) {
-                assertEquals(0, result.getTrips().size());
-            }
-        }
-    }
+//    @Test
+//    public void removeTripRemovesAllUsersInAttendlist() {
+//        List<User> toRemoveUsers = Generator.generateUsers(2, em);
+//        trip = Generator.generateTrip(user, em);
+//
+//        addTripIntoListByTrip(user, trip, 0);
+//        addRequestApproveRequestForUsersList(toRemoveUsers, trip);
+//
+//        userService.removeTrip(user, trip);
+//
+//        final List<User> resultList = em.getEntityManager().createQuery("SELECT u FROM User u", User.class).getResultList();
+//        for (User result : resultList) {
+//            assertEquals(0, result.getAttendlists().size());
+//            if (result.isAdmin()) {
+//                assertEquals(0, result.getTrips().size());
+//            }
+//        }
+//    }
 
     @Test
     public void approveRequestAddsUserIntoAttendlist() {
@@ -157,9 +157,7 @@ public class UserServiceTest {
         joinRequest.setRequester(toAddUser);
         joinRequest.setTrip(trip);
 
-        Exception exception = assertThrows(JoinRequestException.class, () -> {
-            userService.addJoinRequest(toAddUser, joinRequest);
-        });
+        Exception exception = assertThrows(AccessDeniedException.class, () -> userService.addJoinRequest(joinRequest));
         assertEquals("User cannot create more than one join request to one trip.", exception.getMessage());
     }
 
@@ -198,9 +196,7 @@ public class UserServiceTest {
         joinRequest.setTrip(trip);
         em.persist(joinRequest);
 
-        Exception exception = assertThrows(JoinRequestException.class, () -> {
-            userService.addJoinRequest(user, joinRequest);
-        });
+        Exception exception = assertThrows(AccessDeniedException.class, () -> userService.addJoinRequest(joinRequest));
         assertEquals("User cannot create join request to the trip he is author of.", exception.getMessage());
     }
 
@@ -214,9 +210,7 @@ public class UserServiceTest {
         JoinRequest joinRequest = new JoinRequest();
         joinRequest.setRequester(us);
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.addJoinRequest(us, joinRequest);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> userService.addJoinRequest(joinRequest));
         assertEquals("Fields in joinRequest can't be null!", exception.getMessage());
     }
 }

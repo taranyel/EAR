@@ -7,7 +7,6 @@ import joinMe.db.entity.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Objects;
 
 @Repository
 public class AttendlistDao extends BaseDao<Attendlist> {
@@ -24,9 +23,18 @@ public class AttendlistDao extends BaseDao<Attendlist> {
         }
     }
 
-    public List<Attendlist> findByJoiner(User joiner) {
+    public List<Attendlist> findByJoiner(User user) {
         try {
-            return em.createNamedQuery("Attendlist.findByJoiner", Attendlist.class).setParameter("joiner", joiner)
+            return em.createNamedQuery("Attendlist.findByJoiner", Attendlist.class).setParameter("joiner", user)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public List<Attendlist> findByTrip(Trip trip) {
+        try {
+            return em.createNamedQuery("Attendlist.findByTrip", Attendlist.class).setParameter("trip", trip)
                     .getResultList();
         } catch (NoResultException e) {
             return null;
