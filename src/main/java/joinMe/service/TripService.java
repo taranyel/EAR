@@ -1,87 +1,112 @@
 package joinMe.service;
 
 import jakarta.transaction.Transactional;
+import joinMe.db.dao.AttendlistDao;
+import joinMe.db.dao.JoinRequestDao;
 import joinMe.db.dao.TripDao;
-import joinMe.db.entity.Comment;
-import joinMe.db.entity.Trip;
-import joinMe.db.entity.User;
+import joinMe.db.dao.UserDao;
+import joinMe.db.entity.*;
+import joinMe.db.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 @Service
+@Transactional
 public class TripService {
 
-    private final TripDao dao;
+    private final TripDao tripDao;
+
+    private final UserDao userDao;
+
+    private final AttendlistDao attendlistDao;
+
+    private final JoinRequestDao joinRequestDao;
 
     @Autowired
-    public TripService(TripDao dao) {
-        this.dao = dao;
+    public TripService(TripDao tripDao, UserDao userDao, AttendlistDao attendlistDao, JoinRequestDao joinRequestDao) {
+        this.tripDao = tripDao;
+        this.userDao = userDao;
+        this.attendlistDao = attendlistDao;
+        this.joinRequestDao = joinRequestDao;
     }
 
-    @Transactional
+    public void update(Trip current, Trip newTrip) {
+        Objects.requireNonNull(current);
+        Objects.requireNonNull(newTrip);
+
+        current.setCountry(newTrip.getCountry());
+        current.setDescription(newTrip.getDescription());
+        current.setStartDate(newTrip.getStartDate());
+        current.setEndDate(newTrip.getEndDate());
+        current.setCapacity(newTrip.getCapacity());
+        current.setImagePath(newTrip.getImagePath());
+        current.setTitle(newTrip.getTitle());
+
+        tripDao.update(current);
+    }
+
     public void persist(Trip trip) {
         Objects.requireNonNull(trip);
-        dao.persist(trip);
+        tripDao.persist(trip);
     }
 
-    @Transactional
+    public void remove(Trip trip) {
+        Objects.requireNonNull(trip);
+
+        List<Attendlist> attendlists = attendlistDao.findByTrip(trip);
+        for (Attendlist attendlist : attendlists) {
+            attendlist.getJoiner().removeAttendlist(attendlist);
+            userDao.update(attendlist.getJoiner());
+        }
+
+        List<JoinRequest> joinRequests = joinRequestDao.findByTrip(trip);
+        for (JoinRequest joinRequest : joinRequests) {
+            joinRequest.getRequester().removeJoinRequest(joinRequest);
+            userDao.update(joinRequest.getRequester());
+        }
+
+        tripDao.remove(trip);
+    }
+
     public void addComment(Trip trip, Comment comment) {
         Objects.requireNonNull(trip);
         Objects.requireNonNull(comment);
         trip.addComment(comment);
-        dao.update(trip);
+        comment.setTrip(trip);
+        tripDao.update(trip);
     }
 
-    @Transactional
+    public void removeAttendlist(Trip trip, Attendlist attendlist) {
+        Objects.requireNonNull(trip);
+        Objects.requireNonNull(attendlist);
+        trip.removeAttendlist(attendlist);
+        tripDao.update(trip);
+    }
+
     public void removeComment(Trip trip, Comment comment) {
         Objects.requireNonNull(trip);
         Objects.requireNonNull(comment);
         trip.removeComment(comment);
-        dao.update(trip);
+        tripDao.update(trip);
     }
 
-    @Transactional
-    public List<Trip> findByCountry(String country) {
-        Objects.requireNonNull(country);
-        return dao.findByCountry(country);
+    public List<Trip> findAllActiveTrips() {
+        return tripDao.findByStatus(TripStatus.ACTIVE);
     }
 
-    @Transactional
-    public List<Trip> findByStartDate(Date startDate) {
-        Objects.requireNonNull(startDate);
-        return dao.findByStartDate(startDate);
+    public List<Trip> findByAuthor(User user) {
+        Objects.requireNonNull(user);
+        return tripDao.findByAuthor(user);
     }
 
-    @Transactional
-    public List<Trip> findByEndDate(Date endDate) {
-        Objects.requireNonNull(endDate);
-        return dao.findByEndDate(endDate);
-    }
-
-    @Transactional
-    public List<Trip> findByCapacity(Integer capacity) {
-        Objects.requireNonNull(capacity);
-        return dao.findByCapacity(capacity);
-    }
-
-    @Transactional
-    public List<Trip> findByAuthor(User author) {
-        Objects.requireNonNull(author);
-        return dao.findByAuthor(author);
-    }
-
-    @Transactional
-    public List<Trip> findInWishlistByOwner(User owner) {
-        Objects.requireNonNull(owner);
-        return dao.findInWishlistByOwner(owner);
-    }
-
-    public User getAuthor(Trip trip) {
-        Objects.requireNonNull(trip);
-        return trip.getAuthor();
+    public Trip findByID(Integer id) {
+        Trip trip = tripDao.find(id);
+        if (trip == null) {
+            throw NotFoundException.create("Trip", id);
+        }
+        return trip;
     }
 }

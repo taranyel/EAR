@@ -1,32 +1,36 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import joinMe.util.Constants;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 @Setter
 @Getter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @NamedQueries({
-        @NamedQuery(name = "Trip.findByCountry", query = "SELECT t FROM Trip t WHERE t.country = :country"),
-        @NamedQuery(name = "Trip.findByStartDate", query = "SELECT t FROM Trip t WHERE t.startDate = :startDate"),
-        @NamedQuery(name = "Trip.findByEndDate", query = "SELECT t FROM Trip t WHERE t.endDate = :endDate"),
-        @NamedQuery(name = "Trip.findByCapacity", query = "SELECT t FROM Trip t WHERE t.capacity = :capacity"),
-        @NamedQuery(name = "Trip.findByAuthor", query = "SELECT t FROM Trip t WHERE t.author = :author"),
-        @NamedQuery(name = "Trip.findInWishlistByOwner", query = "SELECT w.trip FROM Wishlist w WHERE w.owner = :owner")
+        @NamedQuery(name = "Trip.findByStatus", query = "SELECT t FROM Trip t WHERE t.status = :status ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByAuthor", query = "SELECT t FROM Trip t WHERE t.author = :author ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByCountry", query = "SELECT t FROM Trip t WHERE t.country = :country ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByStartDate", query = "SELECT t FROM Trip t WHERE t.startDate = :startDate ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByEndDate", query = "SELECT t FROM Trip t WHERE t.endDate = :endDate ORDER BY t.created"),
+        @NamedQuery(name = "Trip.findByCapacity", query = "SELECT t FROM Trip t WHERE t.capacity = :capacity ORDER BY t.created"),
 })
 public class Trip extends AbstractEntity {
 
-    public Trip() {
-        created = LocalDateTime.now();
-        comments = new ArrayList<>();
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    @Builder.Default
+    private TripStatus status = Constants.DEFAULT_TRIP_STATUS;
 
     @Basic(optional = false)
     @Column(name = "title", nullable = false)
@@ -50,23 +54,33 @@ public class Trip extends AbstractEntity {
 
     @Basic(optional = false)
     @Column(name = "start_date", nullable = false)
-    private Date startDate;
+    private LocalDate startDate;
 
     @Basic(optional = false)
     @Column(name = "end_date", nullable = false)
-    private Date endDate;
+    private LocalDate endDate;
 
     @Basic(optional = false)
     @Column(name = "created", nullable = false)
-    private LocalDateTime created;
+    @Builder.Default
+    private LocalDateTime created = LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(nullable = false)
     private User author;
 
-    @OneToMany
-    @JoinColumn(name = "trip_id")
-    private List<Comment> comments;
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("time DESC")
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "trip", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Attendlist> attendlists = new ArrayList<>();
+
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    private List<JoinRequest> joinRequests = new ArrayList<>();
 
     public void addComment(Comment comment) {
         Objects.requireNonNull(comment);
@@ -76,5 +90,33 @@ public class Trip extends AbstractEntity {
     public void removeComment(Comment comment) {
         Objects.requireNonNull(comment);
         comments.remove(comment);
+    }
+
+    public void addAttendlist(Attendlist attendlist) {
+        Objects.requireNonNull(attendlist);
+        attendlists.add(attendlist);
+    }
+
+    public void removeAttendlist(Attendlist attendlist) {
+        Objects.requireNonNull(attendlist);
+        attendlists.remove(attendlist);
+    }
+
+    @Override
+    public String toString() {
+        return "Trip{" +
+                "\n attendlists=" + attendlists +
+                ",\n status=" + status +
+                ",\n title='" + title + '\'' +
+                ",\n description='" + description + '\'' +
+                ",\n imagePath='" + imagePath + '\'' +
+                ",\n country='" + country + '\'' +
+                ",\n capacity=" + capacity +
+                ",\n startDate=" + startDate +
+                ",\n endDate=" + endDate +
+                ",\n created=" + created +
+                ",\n author=" + author +
+                ",\n comments=" + comments +
+                "\n}";
     }
 }

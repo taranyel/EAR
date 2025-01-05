@@ -3,11 +3,10 @@ package joinMe.service;
 import jakarta.transaction.Transactional;
 import joinMe.db.dao.CommentDao;
 import joinMe.db.entity.Comment;
-import joinMe.db.entity.Trip;
+import joinMe.db.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -25,7 +24,11 @@ public class CommentService {
         dao.persist(comment);
     }
 
-    public List<Comment> findByTrip(Trip trip) {
-        return dao.findByTrip(trip);
+    public Comment findByID(Integer id) {
+        Comment comment = dao.find(id);
+        if (comment == null) {
+            throw NotFoundException.create("Comment", id);
+        }
+        return comment;
     }
 }

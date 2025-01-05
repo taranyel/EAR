@@ -1,8 +1,9 @@
 package joinMe.db.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,10 +12,13 @@ import java.util.Objects;
 @Setter
 @Getter
 @Entity
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+@NamedQueries({
+        @NamedQuery(name = "Address.findByAll", query = "SELECT a FROM Address a WHERE a.country = :country AND a.city = :city AND a.number = :number AND a.postIndex = :postIndex AND a.street = :street")
+})
 public abstract class Address extends AbstractEntity {
-    public Address() {
-        residents = new ArrayList<>();
-    }
 
     @Basic(optional = false)
     @Column(name = "city", nullable = false)
@@ -36,9 +40,10 @@ public abstract class Address extends AbstractEntity {
     @Column(name = "country", nullable = false)
     private String country;
 
-    @OneToMany
-    @JoinColumn(name = "address_id")
-    private List<User> residents;
+    @OneToMany(mappedBy = "address", fetch = FetchType.EAGER)
+    @Builder.Default
+    @JsonIgnore
+    private List<User> residents = new ArrayList<>();
 
     public void addResident(User resident) {
         Objects.requireNonNull(resident);
@@ -48,5 +53,16 @@ public abstract class Address extends AbstractEntity {
     public void removeResident(User resident) {
         Objects.requireNonNull(resident);
         residents.remove(resident);
+    }
+
+    @Override
+    public String toString() {
+        return "Address{" +
+                "\n city='" + city + '\'' +
+                ",\n street='" + street + '\'' +
+                ",\n number='" + number + '\'' +
+                ",\n postIndex='" + postIndex + '\'' +
+                ",\n country='" + country + '\'' +
+                "\n}";
     }
 }

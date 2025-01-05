@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.ComponentScan;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -67,7 +68,7 @@ public class TripDaoTest {
     public void findByStartDate() {
         createUserTripAndPersist();
 
-        final List<Trip> notFound = tripDao.findByStartDate(new Date());
+        final List<Trip> notFound = tripDao.findByStartDate(LocalDate.now());
         final Trip result = tripDao.findByStartDate(trip.getStartDate()).get(0);
 
         assertEquals(trip, result);

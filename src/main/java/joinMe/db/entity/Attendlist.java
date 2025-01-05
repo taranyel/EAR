@@ -1,8 +1,8 @@
 package joinMe.db.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,22 +11,19 @@ import java.util.Objects;
 @Setter
 @Getter
 @Entity
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @NamedQueries({
         @NamedQuery(name = "Attendlist.findByTripAndJoiner", query = "SELECT a FROM Attendlist a WHERE a.trip = :trip AND a.joiner = :joiner"),
-        @NamedQuery(name = "Attendlist.findByJoiner", query = "SELECT a FROM Attendlist a WHERE a.joiner = :joiner")
+        @NamedQuery(name = "Attendlist.findByJoiner", query = "SELECT a FROM Attendlist a WHERE a.joiner = :joiner"),
+        @NamedQuery(name = "Attendlist.findByTrip", query = "SELECT a FROM Attendlist a WHERE a.trip = :trip")
 })
 public class Attendlist extends AbstractEntity{
-    public Attendlist() {}
 
-    public Attendlist(User joiner, Trip trip) {
-        this.joiner = joiner;
-        this.trip = trip;
-        messages = new ArrayList<>();
-    }
-
-    @OneToMany
-    @JoinColumn(name = "attendlist_id")
-    private List<Message> messages;
+    @OneToMany(mappedBy = "attendlist", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    private List<Message> messages = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -41,12 +38,20 @@ public class Attendlist extends AbstractEntity{
         messages.add(message);
     }
 
-    public void removeMessages(Message message) {
+    public void removeMessage(Message message) {
         Objects.requireNonNull(message);
         messages.remove(message);
     }
 
     public User getAdmin() {
         return trip.getAuthor();
+    }
+
+    @Override
+    public String toString() {
+        return "Attendlist{" +
+                "\n joiner=" + joiner +
+                ",\n messages=" + messages +
+                "\n}";
     }
 }

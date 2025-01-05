@@ -1,5 +1,8 @@
 package joinMe.db.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum RequestStatus {
     APPROVED("APPROVED"), REJECTED("REJECTED"), IN_PROGRESS("IN_PROGRESS");
 

@@ -1,6 +1,6 @@
 package joinMe.db.exception;
 
-public class PersistenceException extends EarException {
+public class PersistenceException extends RuntimeException {
 
     public PersistenceException(String message, Throwable cause) {
         super(message, cause);

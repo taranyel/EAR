@@ -24,6 +24,15 @@ public class JoinRequestDao extends BaseDao<JoinRequest> {
         }
     }
 
+    public List<JoinRequest> findByTrip(Trip trip) {
+        try {
+            return em.createNamedQuery("JoinRequest.findByTrip", JoinRequest.class).setParameter("trip", trip)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
     public JoinRequest findByRequesterAndTrip(User requester, Trip trip) {
         try {
             return em.createNamedQuery("JoinRequest.findByRequesterAndTrip", JoinRequest.class).setParameter("requester", requester).setParameter("trip", trip)
