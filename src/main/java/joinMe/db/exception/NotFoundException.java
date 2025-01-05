@@ -3,7 +3,7 @@ package joinMe.db.exception;
 /**
  * Indicates that a resource was not found.
  */
-public class NotFoundException extends EarException {
+public class NotFoundException extends RuntimeException {
 
     public NotFoundException(String message) {
         super(message);

@@ -5,7 +5,6 @@ import joinMe.db.entity.Attendlist;
 import joinMe.db.entity.Message;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
-import joinMe.db.exception.NotFoundException;
 import joinMe.rest.dto.AttendlistDTO;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.MessageDTO;
@@ -107,24 +106,18 @@ public class AttendlistController {
             return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
         }
 
-        try {
-            User.isBlocked(user);
+        UserService.isBlocked(user);
 
-            Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, user);
+        Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, user);
 
-            if (attendlist == null) {
-                return new ResponseEntity<>("You are not joiner of this trip.", HttpStatus.FORBIDDEN);
-            }
-
-            attendlistService.addMessage(attendlist, message);
-            LOG.debug("Added message {}.", messageDTO);
-            return new ResponseEntity<>(attendlist.toString(), HttpStatus.CREATED);
-
-        } catch (NotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        if (attendlist == null) {
+            return new ResponseEntity<>("You are not joiner of this trip.", HttpStatus.FORBIDDEN);
         }
+
+        attendlistService.addMessage(attendlist, message);
+        LOG.debug("Added message {}.", messageDTO);
+        return new ResponseEntity<>(attendlist.toString(), HttpStatus.CREATED);
+
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -166,21 +159,14 @@ public class AttendlistController {
             return new ResponseEntity<>("Admin cannot leave chat.", HttpStatus.FORBIDDEN);
         }
 
-        try {
-            Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, toLeave);
-            if (attendlist == null) {
-                return new ResponseEntity<>("User with id: " + userID + " is not joiner of trip with id: " + tripID, HttpStatus.BAD_REQUEST);
-            }
-
-            userService.leaveAttendlist(toLeave, attendlist);
-            tripService.removeAttendlist(trip, attendlist);
-
-            return new ResponseEntity<>(trip.toString(), HttpStatus.OK);
-
-        } catch (NotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, toLeave);
+        if (attendlist == null) {
+            return new ResponseEntity<>("User with id: " + userID + " is not joiner of trip with id: " + tripID, HttpStatus.BAD_REQUEST);
         }
+
+        userService.leaveAttendlist(toLeave, attendlist);
+        tripService.removeAttendlist(trip, attendlist);
+
+        return new ResponseEntity<>(trip.toString(), HttpStatus.OK);
     }
 }

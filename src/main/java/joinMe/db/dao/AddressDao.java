@@ -28,11 +28,15 @@ public class AddressDao extends BaseDao<Address> {
         CriteriaQuery<Address> cq = cb.createQuery(Address.class);
         Root<Address> root = cq.from(Address.class);
         cq.select(root)
-                .where(cb.equal(root.get("city"), address.getCity()))
-                .where(cb.equal(root.get("country"), address.getCountry()))
-                .where(cb.equal(root.get("number"), address.getNumber()))
-                .where(cb.equal(root.get("street"), address.getStreet()))
-                .where(cb.equal(root.get("postIndex"), address.getPostIndex()));
+                .where(
+                        cb.and(
+                                cb.equal(root.get("city"), address.getCity()),
+                                cb.equal(root.get("country"), address.getCountry()),
+                                cb.equal(root.get("number"), address.getNumber()),
+                                cb.equal(root.get("street"), address.getStreet()),
+                                cb.equal(root.get("postIndex"), address.getPostIndex())
+                        )
+                );
 
         try {
             return em.createQuery(cq).getSingleResult();

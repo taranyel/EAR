@@ -58,17 +58,12 @@ public class JoinRequestController {
             return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
         }
 
-        try {
-            User.isBlocked(user);
-            JoinRequest joinRequest = joinRequestService.create(user, trip);
-            userService.addJoinRequest(joinRequest);
+        UserService.isBlocked(user);
+        JoinRequest joinRequest = joinRequestService.create(user, trip);
+        userService.addJoinRequest(joinRequest);
 
-            final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", joinRequest.getId());
-            return new ResponseEntity<>(joinRequest.toString(), headers, HttpStatus.CREATED);
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        }
+        final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", joinRequest.getId());
+        return new ResponseEntity<>(joinRequest.toString(), headers, HttpStatus.CREATED);
     }
 
     private JoinRequest getJoinRequestForRequester(User user, int id) {
@@ -100,18 +95,10 @@ public class JoinRequestController {
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> cancelJoinRequest(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
-
-        try {
-            User.isBlocked(user);
-            JoinRequest joinRequest = getJoinRequestForRequester(user, id);
-            userService.cancelJoinRequest(user, joinRequest);
-            return new ResponseEntity<>("Join request with id: " + id + " was canceled.", HttpStatus.OK);
-
-        } catch (NotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        }
+        UserService.isBlocked(user);
+        JoinRequest joinRequest = getJoinRequestForRequester(user, id);
+        userService.cancelJoinRequest(user, joinRequest);
+        return new ResponseEntity<>("Join request with id: " + id + " was canceled.", HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
@@ -128,11 +115,7 @@ public class JoinRequestController {
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public JoinRequestDTO getJoinRequest(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
-        try {
-            return mapper.toDto(getJoinRequestForRequester(user, id));
-        } catch (Exception e) {
-            return null;
-        }
+        return mapper.toDto(getJoinRequestForRequester(user, id));
     }
 
     @PreAuthorize("!anonymous")
@@ -149,45 +132,27 @@ public class JoinRequestController {
     @GetMapping(value = "/forApproval/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public JoinRequestDTO getJoinRequestForApprovalByID(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
-        try {
-            JoinRequest joinRequest = getJoinRequestForApproval(user, id);
-            return mapper.toDto(joinRequest);
-        } catch (Exception e) {
-            return null;
-        }
+        JoinRequest joinRequest = getJoinRequestForApproval(user, id);
+        return mapper.toDto(joinRequest);
     }
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/approve/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> approveJoinRequest(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
-        try {
-            User.isBlocked(user);
-            JoinRequest joinRequest = getJoinRequestForApproval(user, id);
-            userService.approveJoinRequest(joinRequest);
-            return new ResponseEntity<>("Join request was approved.", HttpStatus.OK);
-
-        } catch (NotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        }
+        UserService.isBlocked(user);
+        JoinRequest joinRequest = getJoinRequestForApproval(user, id);
+        userService.approveJoinRequest(joinRequest);
+        return new ResponseEntity<>("Join request was approved.", HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/reject/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> rejectJoinRequest(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
-        try {
-            User.isBlocked(user);
-            JoinRequest joinRequest = getJoinRequestForApproval(user, id);
-            userService.rejectJoinRequest(joinRequest);
-            return new ResponseEntity<>("Join request was rejected.", HttpStatus.OK);
-
-        } catch (NotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        }
+        UserService.isBlocked(user);
+        JoinRequest joinRequest = getJoinRequestForApproval(user, id);
+        userService.rejectJoinRequest(joinRequest);
+        return new ResponseEntity<>("Join request was rejected.", HttpStatus.OK);
     }
 }

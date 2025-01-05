@@ -15,9 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,51 +52,37 @@ public class ComplaintController {
 
         Complaint complaint = mapper.toEntity(complaintDTO);
 
-        try {
-            User.isBlocked(accused);
+        UserService.isBlocked(accused);
 
-            complaint.setAccused(accused);
-            complaintService.persist(complaint);
-            userService.addComplaint(accused, complaint);
+        complaint.setAccused(accused);
+        userService.addComplaint(accused, complaint);
 
-            LOG.debug("Created complaint {}.", complaintDTO);
-            final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", complaint.getId());
-            return new ResponseEntity<>(complaint.toString(), headers, HttpStatus.CREATED);
-
-        } catch (AccessDeniedException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NO_CONTENT);
-        }
+        LOG.debug("Created complaint {}.", complaintDTO);
+        final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", complaint.getId());
+        return new ResponseEntity<>(complaint.toString(), headers, HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
-    @DeleteMapping(value = "/{id}")
-    public ResponseEntity<String> deleteComplaint(Authentication auth, @PathVariable Integer id) {
-        User user = userService.getCurrent(auth);
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping(value = "/{complaintID}")
+    public ResponseEntity<String> deleteComplaint(@PathVariable Integer complaintID) {
+        Complaint complaint = complaintService.findByID(complaintID);
 
-        Complaint complaint = complaintService.findByID(id);
         if (complaint == null) {
-            return new ResponseEntity<>("Complaint with id: " + id + " was not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Complaint with id: " + complaintID + " was not found.", HttpStatus.NOT_FOUND);
         }
+        userService.removeComplaint(complaint.getAccused(), complaint);
 
-        try {
-            User.isBlocked(user);
-        } catch (AccessDeniedException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        }
-
-        userService.removeComplaint(user, complaint);
-        complaintService.remove(complaint);
-
-        return new ResponseEntity<>("Complaint with id: " + id + " was successfully deleted.", HttpStatus.OK);
+        return new ResponseEntity<>("Complaint with id: " + complaintID + " was successfully deleted.", HttpStatus.OK);
     }
 
-    @PreAuthorize("!anonymous")
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<ComplaintDTO> getComplaintsToCurrentUser(Authentication auth) {
-        User user = userService.getCurrent(auth);
-        return complaintService.findByAccused(user)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping(value = "/{accusedID}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<ComplaintDTO> getComplaintsToUser(@PathVariable Integer accusedID) {
+        User accused = userService.findByID(accusedID);
+        if (accused == null) {
+            return null;
+        }
+        return complaintService.findByAccused(accused)
                 .stream()
                 .map(mapper::toDto)
                 .toList();

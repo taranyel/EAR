@@ -16,24 +16,33 @@ import java.util.List;
 @Builder
 public class UserDTO {
     private Integer id;
+
     @NotBlank(message = "Firstname must not be blank")
     private String firstName;
+
     @NotBlank(message = "Lastname must not be blank")
     private String lastName;
+
     @NotBlank(message = "Email must not be blank")
     @Email(message = "Invalid email format")
     private String email;
+
     private Role role;
+
     @NotNull(message = "Birth date must not be blank")
     private LocalDate birthDate;
+
     @NotBlank(message = "Username must not be blank")
     private String username;
+
     private AccountStatus status;
     private Integer averageRating;
     private List<RatingDTO> ratings;
     private String imagePath;
+
     @NotBlank(message = "Password must not be blank")
     private String password;
+
     private AddressDTO address;
     private List<AttendlistDTO> attendlists;
     private List<TripDTO> trips;

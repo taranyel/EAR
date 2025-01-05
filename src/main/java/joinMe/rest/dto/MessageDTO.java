@@ -16,7 +16,9 @@ public class MessageDTO {
     private Integer id;
     private AttendlistDTO attendlist;
     private String authorUsername;
+
     @NotBlank(message = "Message must not be blank")
     private String text;
+
     private LocalDateTime time;
 }

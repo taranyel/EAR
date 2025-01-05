@@ -6,10 +6,10 @@ import joinMe.db.entity.JoinRequest;
 import joinMe.db.entity.RequestStatus;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
-import joinMe.db.exception.JoinRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 import java.util.Objects;
 
@@ -53,12 +53,12 @@ public class JoinRequestService {
 
         User tripCreator = trip.getAuthor();
         if (requester == tripCreator) {
-            throw new JoinRequestException("User cannot create join request to the trip he/she is author of.");
+            throw new AccessDeniedException("User cannot create join request to the trip he/she is author of.");
         }
 
         JoinRequest existingRequest = dao.findByRequesterAndTrip(requester, trip);
         if (existingRequest != null && existingRequest.getStatus() != RequestStatus.REJECTED) {
-            throw new JoinRequestException("User cannot create more than one join request to one trip.");
+            throw new AccessDeniedException("User cannot create more than one join request to one trip.");
         }
 
         return JoinRequest.builder()

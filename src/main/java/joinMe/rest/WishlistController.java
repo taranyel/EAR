@@ -69,16 +69,9 @@ public class WishlistController {
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> deleteWishlist(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
-        try {
-            Wishlist wishlist = getWishlist(id, user);
-            userService.removeWishlist(user, wishlist);
-            return new ResponseEntity<>("Wishlist with id: " + id + " was successfully removed.", HttpStatus.OK);
-
-        } catch (NotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        }
+        Wishlist wishlist = getWishlist(id, user);
+        userService.removeWishlist(user, wishlist);
+        return new ResponseEntity<>("Wishlist with id: " + id + " was successfully removed.", HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
@@ -95,11 +88,7 @@ public class WishlistController {
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public TripDTO getWishlist(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
-        try {
-            return mapper.toDto(getWishlist(id, user).getTrip());
-        } catch (Exception e) {
-            return null;
-        }
+        return mapper.toDto(getWishlist(id, user).getTrip());
     }
 
     private Wishlist getWishlist(int id, User user) {

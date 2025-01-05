@@ -7,6 +7,7 @@ import joinMe.db.dao.WishlistDao;
 import joinMe.db.entity.*;
 import joinMe.security.model.UserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -67,7 +68,6 @@ public class UserService {
         current.setUsername(newUser.getUsername());
         current.setImagePath(newUser.getImagePath());
         current.setBirthdate(newUser.getBirthdate());
-        current.setRole(newUser.getRole());
         userDao.update(current);
     }
 
@@ -217,25 +217,6 @@ public class UserService {
         return user.getRole().getName().equals("ROLE_ADMIN");
     }
 
-//    public ResponseEntity<String> checkAuthRole(Authentication auth, User user, String methodType, Logger LOG) {
-//        if (auth == null || !auth.isAuthenticated()) {
-//            if (!user.getRole().getName().equals("ROLE_USER")) {
-//                String message = String.format("Unauthorized %s attempt for non-USER role by an anonymous user.", methodType);
-//                LOG.warn(message);
-//                return new ResponseEntity<>(message, HttpStatus.UNAUTHORIZED);
-//            }
-//        } else {
-//            boolean isAdmin = auth.getAuthorities().toString().equals("[ROLE_ADMIN]");
-//
-//            if (!isAdmin && user.getRole().getName().equals("ROLE_ADMIN")) {
-//                String message = String.format("Unauthorized %s attempt for ADMIN role by a USER.", methodType);
-//                LOG.warn(message);
-//                return new ResponseEntity<>(message, HttpStatus.FORBIDDEN);
-//            }
-//        }
-//        return null;
-//    }
-
     public List<User> getAllJoinersOfTrip(Trip trip) {
         Objects.requireNonNull(trip);
         return userDao.getAllJoinersOfAttendlistByTrip(trip);
@@ -250,5 +231,11 @@ public class UserService {
         assert auth.getPrincipal() instanceof UserDetails;
         final int userId = ((UserDetails) auth.getPrincipal()).getUser().getId();
         return findByID(userId);
+    }
+
+    public static void isBlocked(User user) throws AccessDeniedException {
+        if (user.getStatus() == AccountStatus.BLOCKED) {
+            throw new AccessDeniedException("Your account is blocked.");
+        }
     }
 }

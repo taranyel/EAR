@@ -75,7 +75,7 @@ public class AddressController {
         return mapper.toDto(addressService.findByID(user.getAddress().getId()));
     }
 
-    @PreAuthorize("!anonymous")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping(value = "/{addressID}/residents", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<UserDTO> getAllResidents(@PathVariable Integer addressID) {
         LOG.info("Retrieving all residents.");

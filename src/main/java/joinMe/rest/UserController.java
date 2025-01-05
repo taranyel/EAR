@@ -45,10 +45,6 @@ public class UserController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> register(@Valid @RequestBody RegisterDTO registerDTO) {
-        if (registerDTO == null) {
-            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
-        }
-
         User user = mapper.toEntity(registerDTO.getUser());
 
         Address address = mapper.toEntity(registerDTO.getAddress());
@@ -63,10 +59,6 @@ public class UserController {
     @PreAuthorize("!anonymous")
     @PutMapping(value = "/current", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateUser(Authentication auth, @Valid @RequestBody UserDTO userDTO) {
-        if (userDTO == null) {
-            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
-        }
-
         User user = userService.getCurrent(auth);
         User userToUpdate = mapper.toEntity(userDTO);
 
@@ -100,18 +92,22 @@ public class UserController {
 
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> rateUser(@PathVariable Integer id, @Valid @RequestBody RatingDTO ratingDTO) {
-        User user = userService.findByID(id);
+    public ResponseEntity<String> rateUser(Authentication auth, @PathVariable Integer id, @Valid @RequestBody RatingDTO ratingDTO) {
+        User current = userService.getCurrent(auth);
+        User toRate = userService.findByID(id);
 
-        if (user == null) {
-            LOG.warn("User with id: {} was not found.", id);
-            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+        if (toRate == null) {
+            return userNotFound(id);
+        }
+
+        if (Objects.equals(current.getId(), toRate.getId())) {
+            return new ResponseEntity<>("You can rate only another user.", HttpStatus.FORBIDDEN);
         }
 
         Rating rating = mapper.toEntity(ratingDTO);
-        userService.addRating(user, rating);
+        userService.addRating(toRate, rating);
 
-        return new ResponseEntity<>(user.toString(), HttpStatus.OK);
+        return new ResponseEntity<>(toRate.toString(), HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -119,12 +115,16 @@ public class UserController {
     public ResponseEntity<String> deleteUser(@PathVariable Integer id) {
         User user = userService.findByID(id);
         if (user == null) {
-            LOG.warn("User with id: {} was not found.", id);
-            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+            return userNotFound(id);
         }
         userService.remove(user);
         LOG.info("User \"{}\" was successfully deleted.", user.getUsername());
         return new ResponseEntity<>("User with id: " + id + " was successfully deleted.", HttpStatus.OK);
+    }
+
+    private ResponseEntity<String> userNotFound(Integer id) {
+        LOG.warn("User with id: {} was not found.", id);
+        return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -132,8 +132,7 @@ public class UserController {
     public ResponseEntity<String> makeAdmin(@PathVariable Integer id) {
         User user = userService.findByID(id);
         if (user == null) {
-            LOG.warn("User with id: {} was not found.", id);
-            return new ResponseEntity<>("User with id: " + id + " was not found", HttpStatus.NOT_FOUND);
+            return userNotFound(id);
         }
         userService.setAdmin(user);
         LOG.info("New admin was successfully set.");
@@ -145,8 +144,7 @@ public class UserController {
     public ResponseEntity<String> blockUser(@PathVariable Integer id) {
         User user = userService.findByID(id);
         if (user == null) {
-            LOG.warn("User with id: {} was not found.", id);
-            return new ResponseEntity<>("User with id: " + id + " was not found.", HttpStatus.NOT_FOUND);
+            return userNotFound(id);
         }
         userService.blockUser(user);
         LOG.info("User \"{}\" was blocked.", user.getUsername());
@@ -157,10 +155,8 @@ public class UserController {
     @GetMapping("/{id}/unblock")
     public ResponseEntity<String> unblockUser(@PathVariable Integer id) {
         User user = userService.findByID(id);
-
         if (user == null) {
-            LOG.warn("User with id: {} was not found.", id);
-            return new ResponseEntity<>("User with id: " + id + " was not found.", HttpStatus.NOT_FOUND);
+            return userNotFound(id);
         }
         userService.unblockUser(user);
         LOG.info("User \"{}\" was unblocked.", user.getUsername());

@@ -11,7 +11,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class RatingDTO {
+
     @NotNull(message = "Rating must not be blank")
     private Integer rating;
+
     private String comment;
 }

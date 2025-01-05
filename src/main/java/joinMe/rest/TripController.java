@@ -18,7 +18,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -60,12 +59,7 @@ public class TripController {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
         User user = userService.getCurrent(auth);
-
-        try {
-            User.isBlocked(user);
-        } catch (AccessDeniedException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        }
+        UserService.isBlocked(user);
 
         final Trip trip = tripService.findByID(id);
 
@@ -83,11 +77,7 @@ public class TripController {
 
         Trip tripToUpdate = mapper.toEntity(tripDTO);
 
-        try {
-            tripService.update(trip, tripToUpdate);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        }
+        tripService.update(trip, tripToUpdate);
 
         LOG.debug("Updated trip {}.", tripDTO);
         return new ResponseEntity<>(trip.toString(), HttpStatus.OK);
@@ -102,24 +92,17 @@ public class TripController {
         User user = userService.getCurrent(auth);
         Trip trip = mapper.toEntity(tripDTO);
 
-        try {
-            User.isBlocked(user);
+        UserService.isBlocked(user);
 
-            trip.setAuthor(user);
-            userService.addTrip(user, trip);
-            Attendlist attendlist = attendlistService.create(user, trip);
+        trip.setAuthor(user);
+        userService.addTrip(user, trip);
+        Attendlist attendlist = attendlistService.create(user, trip);
 
-            LOG.debug("Created trip {}.", trip);
-            LOG.debug("Created attendlist {}.", attendlist);
+        LOG.debug("Created trip {}.", trip);
+        LOG.debug("Created attendlist {}.", attendlist);
 
-            final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", trip.getId());
-            return new ResponseEntity<>(trip.toString(), headers, HttpStatus.CREATED);
-
-        } catch (AccessDeniedException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NO_CONTENT);
-        }
+        final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", trip.getId());
+        return new ResponseEntity<>(trip.toString(), headers, HttpStatus.CREATED);
     }
 
     @PreAuthorize("!anonymous")
@@ -127,22 +110,15 @@ public class TripController {
     public ResponseEntity<String> deleteTrip(Authentication auth, @PathVariable Integer id) {
         User user = userService.getCurrent(auth);
 
-        try {
-            User.isBlocked(user);
-            Trip trip = getTrip(id);
+        UserService.isBlocked(user);
+        Trip trip = getTrip(id);
 
-            if (user.getRole() != Role.ADMIN && !trip.getAuthor().getId().equals(user.getId())) {
-                return new ResponseEntity<>("Cannot delete trip of another user.", HttpStatus.FORBIDDEN);
-            }
-            userService.removeTrip(user, trip);
-            tripService.remove(trip);
-            return new ResponseEntity<>("Trip with id: " + id + " was successfully deleted.", HttpStatus.OK);
-
-        } catch (NotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        if (user.getRole() != Role.ADMIN && !trip.getAuthor().getId().equals(user.getId())) {
+            return new ResponseEntity<>("Cannot delete trip of another user.", HttpStatus.FORBIDDEN);
         }
+        userService.removeTrip(user, trip);
+        tripService.remove(trip);
+        return new ResponseEntity<>("Trip with id: " + id + " was successfully deleted.", HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
@@ -213,12 +189,8 @@ public class TripController {
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public TripDTO getTripByID(@PathVariable Integer id) {
-        try {
-            Trip trip = getTrip(id);
-            return mapper.toDto(trip);
-        } catch (NotFoundException e) {
-            return null;
-        }
+        Trip trip = getTrip(id);
+        return mapper.toDto(trip);
     }
 
     @PreAuthorize("!anonymous")
@@ -227,24 +199,16 @@ public class TripController {
         if (commentDTO == null) {
             return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
         }
-
         User user = userService.getCurrent(auth);
 
-        try {
-            User.isBlocked(user);
-            Trip trip = getTrip(tripID);
-            Comment comment = mapper.toEntity(commentDTO);
+        UserService.isBlocked(user);
+        Trip trip = getTrip(tripID);
+        Comment comment = mapper.toEntity(commentDTO);
 
-            comment.setAuthor(user);
-            tripService.addComment(trip, comment);
-            LOG.debug("Added comment {}.", comment);
-            return new ResponseEntity<>(trip.toString(), HttpStatus.CREATED);
-
-        } catch (NotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-        }
+        comment.setAuthor(user);
+        tripService.addComment(trip, comment);
+        LOG.debug("Added comment {}.", comment);
+        return new ResponseEntity<>(trip.toString(), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

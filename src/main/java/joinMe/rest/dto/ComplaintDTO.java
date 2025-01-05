@@ -15,7 +15,9 @@ import java.time.LocalDateTime;
 public class ComplaintDTO {
     private Integer id;
     private UserDTO accused;
+
     @NotBlank(message = "Description must not be blank")
     private String description;
+
     private LocalDateTime time;
 }

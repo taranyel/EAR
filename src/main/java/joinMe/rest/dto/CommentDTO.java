@@ -15,8 +15,10 @@ import java.time.LocalDateTime;
 public class CommentDTO {
     private Integer id;
     private String authorUsername;
+
     @NotBlank(message = "Comment must not be blank")
     private String text;
+
     private TripDTO trip;
     private LocalDateTime time;
 }
