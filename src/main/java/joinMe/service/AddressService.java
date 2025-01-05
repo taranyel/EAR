@@ -76,7 +76,7 @@ public class AddressService {
     }
 
     public void validateAddressType(String type) {
-        if (!Objects.equals(type, "flat") || !Objects.equals(type, "house")) {
+        if (!Objects.equals(type, "flat") && !Objects.equals(type, "house")) {
             throw new IllegalArgumentException("Invalid address type");
         }
     }
