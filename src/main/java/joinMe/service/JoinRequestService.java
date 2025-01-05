@@ -2,10 +2,8 @@ package joinMe.service;
 
 import jakarta.transaction.Transactional;
 import joinMe.db.dao.JoinRequestDao;
-import joinMe.db.entity.JoinRequest;
-import joinMe.db.entity.RequestStatus;
-import joinMe.db.entity.Trip;
-import joinMe.db.entity.User;
+import joinMe.db.entity.*;
+import joinMe.db.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +15,12 @@ import java.util.Objects;
 @Transactional
 public class JoinRequestService {
     private final JoinRequestDao dao;
+    private final JoinRequestDao joinRequestDao;
 
     @Autowired
-    public JoinRequestService(JoinRequestDao dao) {
+    public JoinRequestService(JoinRequestDao dao, JoinRequestDao joinRequestDao) {
         this.dao = dao;
+        this.joinRequestDao = joinRequestDao;
     }
 
     public void persist(JoinRequest joinRequest) {
@@ -29,7 +29,11 @@ public class JoinRequestService {
     }
 
     public JoinRequest findByID(Integer id) {
-        return dao.find(id);
+        JoinRequest joinRequest = joinRequestDao.find(id);
+        if (joinRequest == null) {
+            throw NotFoundException.create("JoinRequest", id);
+        }
+        return joinRequest;
     }
 
     public List<JoinRequest> getJoinRequestsForApproval(User author) {

@@ -6,6 +6,7 @@ import joinMe.db.dao.JoinRequestDao;
 import joinMe.db.dao.TripDao;
 import joinMe.db.dao.UserDao;
 import joinMe.db.entity.*;
+import joinMe.db.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -101,8 +102,11 @@ public class TripService {
         return tripDao.findByAuthor(user);
     }
 
-    @Transactional
     public Trip findByID(Integer id) {
-        return tripDao.find(id);
+        Trip trip = tripDao.find(id);
+        if (trip == null) {
+            throw NotFoundException.create("Trip", id);
+        }
+        return trip;
     }
 }

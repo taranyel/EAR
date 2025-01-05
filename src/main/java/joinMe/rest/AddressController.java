@@ -42,18 +42,15 @@ public class AddressController {
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<String> changeAddress(Authentication auth,@Valid @RequestBody AddressDTO addressDTO) {
-        if (addressDTO == null) {
-            return new ResponseEntity<>("Data is missing", HttpStatus.BAD_REQUEST);
-        }
-
+        addressService.validateAddressType(addressDTO.getType());
         User user = userService.getCurrent(auth);
-
         Address address = mapper.toEntity(addressDTO);
+
         user.getAddress().removeResident(user);
         addressService.setAddress(address, user);
-
         userService.update(user);
 
+        LOG.info("User with id: {} has changed address. New address is: {}", user.getId(), address);
         return new ResponseEntity<>(user.toString(), HttpStatus.OK);
     }
 
@@ -78,11 +75,8 @@ public class AddressController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping(value = "/{addressID}/residents", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<UserDTO> getAllResidents(@PathVariable Integer addressID) {
-        LOG.info("Retrieving all residents.");
         Address address = addressService.findByID(addressID);
-        if (address == null) {
-            return null;
-        }
+        LOG.info("Retrieving all residents of address with id: .{}", addressID);
         return address.getResidents()
                 .stream()
                 .map(mapper::toDto)

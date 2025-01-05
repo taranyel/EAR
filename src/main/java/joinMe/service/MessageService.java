@@ -3,6 +3,7 @@ package joinMe.service;
 import joinMe.db.dao.MessageDao;
 import joinMe.db.entity.Message;
 import joinMe.db.entity.Trip;
+import joinMe.db.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +28,11 @@ public class MessageService {
     }
 
     public Message findByID(Integer id) {
-        return dao.find(id);
+        Message message = dao.find(id);
+        if (message == null) {
+            throw NotFoundException.create("Message", id);
+        }
+        return message;
     }
 
     public List<Message> findByTrip(Trip trip) {

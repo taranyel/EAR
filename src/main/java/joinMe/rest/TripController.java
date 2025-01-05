@@ -1,8 +1,10 @@
 package joinMe.rest;
 
 import jakarta.validation.Valid;
-import joinMe.db.entity.*;
-import joinMe.db.exception.NotFoundException;
+import joinMe.db.entity.Comment;
+import joinMe.db.entity.Role;
+import joinMe.db.entity.Trip;
+import joinMe.db.entity.User;
 import joinMe.rest.dto.CommentDTO;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.TripDTO;
@@ -55,17 +57,10 @@ public class TripController {
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<String> updateTrip(Authentication auth, @PathVariable Integer id, @Valid @RequestBody TripDTO tripDTO) {
-        if (tripDTO == null) {
-            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
-        }
         User user = userService.getCurrent(auth);
         UserService.isBlocked(user);
 
         final Trip trip = tripService.findByID(id);
-
-        if (trip == null) {
-            return new ResponseEntity<>("Trip with id: " + id + " was not found", HttpStatus.NOT_FOUND);
-        }
 
         if (!Objects.equals(id, tripDTO.getId())) {
             return new ResponseEntity<>("You can modify only your trips.", HttpStatus.FORBIDDEN);
@@ -76,19 +71,15 @@ public class TripController {
         }
 
         Trip tripToUpdate = mapper.toEntity(tripDTO);
-
         tripService.update(trip, tripToUpdate);
 
-        LOG.debug("Updated trip {}.", tripDTO);
+        LOG.debug("Updated trip {}.", trip);
         return new ResponseEntity<>(trip.toString(), HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createTrip(Authentication auth, @Valid @RequestBody TripDTO tripDTO) {
-        if (tripDTO == null) {
-            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
-        }
         User user = userService.getCurrent(auth);
         Trip trip = mapper.toEntity(tripDTO);
 
@@ -96,10 +87,9 @@ public class TripController {
 
         trip.setAuthor(user);
         userService.addTrip(user, trip);
-        Attendlist attendlist = attendlistService.create(user, trip);
+        attendlistService.create(user, trip);
 
         LOG.debug("Created trip {}.", trip);
-        LOG.debug("Created attendlist {}.", attendlist);
 
         final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", trip.getId());
         return new ResponseEntity<>(trip.toString(), headers, HttpStatus.CREATED);
@@ -111,13 +101,15 @@ public class TripController {
         User user = userService.getCurrent(auth);
 
         UserService.isBlocked(user);
-        Trip trip = getTrip(id);
+        Trip trip = tripService.findByID(id);
 
         if (user.getRole() != Role.ADMIN && !trip.getAuthor().getId().equals(user.getId())) {
             return new ResponseEntity<>("Cannot delete trip of another user.", HttpStatus.FORBIDDEN);
         }
         userService.removeTrip(user, trip);
         tripService.remove(trip);
+
+        LOG.debug("Deleted trip with id: {}.", id);
         return new ResponseEntity<>("Trip with id: " + id + " was successfully deleted.", HttpStatus.OK);
     }
 
@@ -180,6 +172,7 @@ public class TripController {
     @GetMapping(value = "/current", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TripDTO> getCurrentUserTrips(Authentication auth) {
         User user = userService.getCurrent(auth);
+        LOG.info("Retrieving all current user trips.");
         return tripService.findByAuthor(user)
                 .stream()
                 .map(mapper::toDto)
@@ -189,25 +182,23 @@ public class TripController {
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public TripDTO getTripByID(@PathVariable Integer id) {
-        Trip trip = getTrip(id);
+        Trip trip = tripService.findByID(id);
+        LOG.info("Retrieving trip with id: {}.", id);
         return mapper.toDto(trip);
     }
 
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addComment(Authentication auth, @PathVariable Integer tripID, @Valid @RequestBody CommentDTO commentDTO) {
-        if (commentDTO == null) {
-            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
-        }
         User user = userService.getCurrent(auth);
 
         UserService.isBlocked(user);
-        Trip trip = getTrip(tripID);
+        Trip trip = tripService.findByID(tripID);
         Comment comment = mapper.toEntity(commentDTO);
 
         comment.setAuthor(user);
         tripService.addComment(trip, comment);
-        LOG.debug("Added comment {}.", comment);
+        LOG.debug("Added comment {} for trip with id: {}.", comment, tripID);
         return new ResponseEntity<>(trip.toString(), HttpStatus.CREATED);
     }
 
@@ -216,24 +207,9 @@ public class TripController {
     public ResponseEntity<String> deleteComment(@PathVariable Integer tripID, @PathVariable Integer commentID) {
         Comment comment = commentService.findByID(commentID);
         Trip trip = tripService.findByID(tripID);
-
-        if (comment == null) {
-            return new ResponseEntity<>("Comment with id: " + commentID + " was not found.", HttpStatus.NOT_FOUND);
-        }
-        if (trip == null) {
-            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
-        }
-
         tripService.removeComment(trip, comment);
-        return new ResponseEntity<>("Comment with id: " + commentID + " was successfully deleted.", HttpStatus.OK);
-    }
 
-
-    private Trip getTrip(int id) {
-        Trip trip = tripService.findByID(id);
-        if (trip == null) {
-            throw NotFoundException.create("Trip", id);
-        }
-        return trip;
+        LOG.debug("Removed comment with id: {} for trip with id: {}.", commentID, tripID);
+        return new ResponseEntity<>("Comment with id: " + commentID + " was successfully deleted for trip with id: " + tripID, HttpStatus.OK);
     }
 }

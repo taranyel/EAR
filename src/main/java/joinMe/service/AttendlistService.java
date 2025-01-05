@@ -4,11 +4,10 @@ import jakarta.transaction.Transactional;
 import joinMe.db.dao.AttendlistDao;
 import joinMe.db.dao.TripDao;
 import joinMe.db.dao.UserDao;
-import joinMe.db.entity.Attendlist;
-import joinMe.db.entity.Message;
-import joinMe.db.entity.Trip;
-import joinMe.db.entity.User;
+import joinMe.db.entity.*;
+import joinMe.db.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,7 +31,11 @@ public class AttendlistService {
     }
 
     public Attendlist findByID(Integer id) {
-        return attendlistDao.find(id);
+        Attendlist attendlist = attendlistDao.find(id);
+        if (attendlist == null) {
+            throw NotFoundException.create("Attendlist", id);
+        }
+        return attendlist;
     }
 
     public Attendlist create(User admin, Trip trip) {
@@ -81,5 +84,13 @@ public class AttendlistService {
     public void remove(Attendlist attendlist) {
         Objects.requireNonNull(attendlist);
         attendlistDao.remove(attendlist);
+    }
+
+    public Attendlist isJoinerOfTrip(User user, Trip trip) {
+        Attendlist attendlist = attendlistDao.findByTripAndJoiner(trip, user);
+        if (user.getRole() != Role.ADMIN && attendlist == null) {
+            throw new AccessDeniedException("User with id: " + user.getId() + " is not joiner of trip with id: " + trip.getId());
+        }
+        return attendlist;
     }
 }

@@ -5,6 +5,7 @@ import joinMe.db.dao.JoinRequestDao;
 import joinMe.db.dao.UserDao;
 import joinMe.db.dao.WishlistDao;
 import joinMe.db.entity.*;
+import joinMe.db.exception.NotFoundException;
 import joinMe.security.model.UserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -81,12 +82,12 @@ public class UserService {
 
         if (userDao.findByEmail(user.getEmail()) != null) {
             throw new IllegalArgumentException(
-                    String.format("User with \"%s\" email already exists", user.getEmail())
+                    String.format("User with \"%s\" email already exists.", user.getEmail())
             );
         }
         if (userDao.findByUsername(user.getUsername()) != null) {
             throw new IllegalArgumentException(
-                    String.format("User with \"%s\" username already exists", user.getUsername())
+                    String.format("User with \"%s\" username already exists.", user.getUsername())
             );
         }
 
@@ -95,7 +96,11 @@ public class UserService {
     }
 
     public User findByID(Integer id) {
-        return userDao.find(id);
+        User user = userDao.find(id);
+        if (user == null) {
+            throw NotFoundException.create("User", id);
+        }
+        return user;
     }
 
     /// When trip is created, attendlist (chat) is created automatically and trip creator is added to the chat as admin

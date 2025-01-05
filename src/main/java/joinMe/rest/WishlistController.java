@@ -3,7 +3,6 @@ package joinMe.rest;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
 import joinMe.db.entity.Wishlist;
-import joinMe.db.exception.NotFoundException;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.TripDTO;
 import joinMe.rest.util.RestUtils;
@@ -53,10 +52,6 @@ public class WishlistController {
         User user = userService.getCurrent(auth);
         Trip trip = tripService.findByID(tripID);
 
-        if (trip == null) {
-            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
-        }
-
         Wishlist wishlist = wishlistService.create(user, trip);
         userService.addWishlist(user, wishlist);
 
@@ -71,6 +66,8 @@ public class WishlistController {
         User user = userService.getCurrent(auth);
         Wishlist wishlist = getWishlist(id, user);
         userService.removeWishlist(user, wishlist);
+
+        LOG.info("Wishlist with id: {} was removed.", id);
         return new ResponseEntity<>("Wishlist with id: " + id + " was successfully removed.", HttpStatus.OK);
     }
 
@@ -78,6 +75,7 @@ public class WishlistController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TripDTO> getAllWishlists(Authentication auth) {
         User user = userService.getCurrent(auth);
+        LOG.info("Retrieving all wishlists for current user.");
         return wishlistService.findWishlistByOwner(user)
                 .stream()
                 .map(mapper::toDto)
@@ -85,17 +83,15 @@ public class WishlistController {
     }
 
     @PreAuthorize("!anonymous")
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public TripDTO getWishlist(Authentication auth, @PathVariable Integer id) {
+    @GetMapping(value = "/{wishlistID}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public TripDTO getWishlist(Authentication auth, @PathVariable Integer wishlistID) {
         User user = userService.getCurrent(auth);
-        return mapper.toDto(getWishlist(id, user).getTrip());
+        LOG.info("Retrieving wishlist with id: {} for current user.", wishlistID);
+        return mapper.toDto(getWishlist(wishlistID, user).getTrip());
     }
 
     private Wishlist getWishlist(int id, User user) {
         Wishlist wishlist = wishlistService.findByID(id);
-        if (wishlist == null) {
-            throw NotFoundException.create("Wishlist", id);
-        }
 
         if (!wishlist.getOwner().getId().equals(user.getId())) {
             throw new AccessDeniedException("Cannot access wishlist of another user.");

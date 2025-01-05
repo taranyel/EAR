@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import joinMe.db.dao.AddressDao;
 import joinMe.db.entity.Address;
 import joinMe.db.entity.User;
+import joinMe.db.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +59,11 @@ public class AddressService {
     }
 
     public Address findByID(int id) {
-        return dao.find(id);
+        Address address = dao.find(id);
+        if (address == null) {
+            throw NotFoundException.create("Address", id);
+        }
+        return address;
     }
 
     public List<Address> findAll() {
@@ -68,5 +73,11 @@ public class AddressService {
     public Address findByAll(Address address) {
         Objects.requireNonNull(address);
         return dao.findByAll(address);
+    }
+
+    public void validateAddressType(String type) {
+        if (!Objects.equals(type, "flat") || !Objects.equals(type, "house")) {
+            throw new IllegalArgumentException("Invalid address type");
+        }
     }
 }

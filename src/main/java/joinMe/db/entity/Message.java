@@ -16,8 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @NamedQueries({
-        @NamedQuery(name = "Message.findByAuthor", query = "SELECT m FROM Message m WHERE m.author = :author"),
-        @NamedQuery(name = "Message.findByTrip", query = "SELECT m FROM Message m LEFT JOIN Attendlist a WHERE a.trip = :trip ORDER BY m.time DESC")
+        @NamedQuery(name = "Message.findByAuthor", query = "SELECT m FROM Message m WHERE m.author = :author")
 })
 public class Message extends AbstractEntity {
 

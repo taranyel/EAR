@@ -16,7 +16,6 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @NamedQueries({
-        @NamedQuery(name = "Address.findAll", query = "SELECT a FROM Address a"),
         @NamedQuery(name = "Address.findByAll", query = "SELECT a FROM Address a WHERE a.country = :country AND a.city = :city AND a.number = :number AND a.postIndex = :postIndex AND a.street = :street")
 })
 public abstract class Address extends AbstractEntity {

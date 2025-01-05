@@ -47,9 +47,9 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<ErrorInfo> unsupportedMediaType(HttpMediaTypeNotSupportedException e) {
+    public ResponseEntity<String> unsupportedMediaType(HttpMediaTypeNotSupportedException e) {
         logException(e);
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>("Data is missing or content type is not supported.", HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NullPointerException.class)
@@ -60,6 +60,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorInfo> resourceNotFound(HttpServletRequest request, NotFoundException e) {
+        logException(e);
         return new ResponseEntity<>(errorInfo(request, e), HttpStatus.NOT_FOUND);
     }
 

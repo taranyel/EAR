@@ -5,13 +5,11 @@ import joinMe.db.entity.Complaint;
 import joinMe.db.entity.User;
 import joinMe.rest.dto.ComplaintDTO;
 import joinMe.rest.dto.Mapper;
-import joinMe.rest.util.RestUtils;
 import joinMe.service.ComplaintService;
 import joinMe.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,15 +39,7 @@ public class ComplaintController {
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{accusedID}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createComplaint(@PathVariable Integer accusedID, @Valid @RequestBody ComplaintDTO complaintDTO) {
-        if (complaintDTO == null) {
-            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
-        }
-
         User accused = userService.findByID(accusedID);
-        if (accused == null) {
-            return new ResponseEntity<>("Accused user with id: " + accusedID + " not found.", HttpStatus.NOT_FOUND);
-        }
-
         Complaint complaint = mapper.toEntity(complaintDTO);
 
         UserService.isBlocked(accused);
@@ -57,19 +47,14 @@ public class ComplaintController {
         complaint.setAccused(accused);
         userService.addComplaint(accused, complaint);
 
-        LOG.debug("Created complaint {}.", complaintDTO);
-        final HttpHeaders headers = RestUtils.createLocationHeaderFromCurrentUri("/{id}", complaint.getId());
-        return new ResponseEntity<>(complaint.toString(), headers, HttpStatus.CREATED);
+        LOG.debug("Created complaint {}.", complaint);
+        return new ResponseEntity<>(complaint.toString(), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping(value = "/{complaintID}")
     public ResponseEntity<String> deleteComplaint(@PathVariable Integer complaintID) {
         Complaint complaint = complaintService.findByID(complaintID);
-
-        if (complaint == null) {
-            return new ResponseEntity<>("Complaint with id: " + complaintID + " was not found.", HttpStatus.NOT_FOUND);
-        }
         userService.removeComplaint(complaint.getAccused(), complaint);
 
         return new ResponseEntity<>("Complaint with id: " + complaintID + " was successfully deleted.", HttpStatus.OK);
@@ -79,9 +64,7 @@ public class ComplaintController {
     @GetMapping(value = "/{accusedID}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ComplaintDTO> getComplaintsToUser(@PathVariable Integer accusedID) {
         User accused = userService.findByID(accusedID);
-        if (accused == null) {
-            return null;
-        }
+        LOG.info("Retrieving complaints to user with id: {}.", accusedID);
         return complaintService.findByAccused(accused)
                 .stream()
                 .map(mapper::toDto)

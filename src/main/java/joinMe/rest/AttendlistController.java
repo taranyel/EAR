@@ -9,7 +9,6 @@ import joinMe.rest.dto.AttendlistDTO;
 import joinMe.rest.dto.Mapper;
 import joinMe.rest.dto.MessageDTO;
 import joinMe.rest.dto.UserDTO;
-import joinMe.security.model.UserDetails;
 import joinMe.service.AttendlistService;
 import joinMe.service.MessageService;
 import joinMe.service.TripService;
@@ -56,6 +55,7 @@ public class AttendlistController {
     @PreAuthorize("!anonymous")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<AttendlistDTO> getCurrentUserAttendLists(Authentication auth) {
+        LOG.info("Retrieving current user attendlists.");
         User user = userService.getCurrent(auth);
         return attendlistService.findByJoiner(user)
                 .stream()
@@ -65,12 +65,13 @@ public class AttendlistController {
 
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{tripID}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<MessageDTO> getAttendList(@PathVariable Integer tripID) {
+    public List<MessageDTO> getAttendList(Authentication auth, @PathVariable Integer tripID) {
         Trip trip = tripService.findByID(tripID);
-        if (trip == null) {
-            return null;
-        }
+        User user = userService.getCurrent(auth);
 
+        attendlistService.isJoinerOfTrip(user, trip);
+
+        LOG.info("Retrieving attendlist for trip with id: {}", tripID);
         return messageService.findByTrip(trip)
                 .stream()
                 .map(mapper::toDto)
@@ -80,11 +81,11 @@ public class AttendlistController {
     @PreAuthorize("!anonymous")
     @GetMapping(value = "/{tripID}/users", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<UserDTO> getAllJoinersOfTrip(Authentication auth, @PathVariable Integer tripID) {
-        assert auth.getPrincipal() instanceof UserDetails;
+        User user = userService.getCurrent(auth);
         Trip trip = tripService.findByID(tripID);
-        if (trip == null) {
-            return null;
-        }
+        attendlistService.isJoinerOfTrip(user, trip);
+
+        LOG.info("Retrieving joiners of trip with id: {}", tripID);
         return userService.getAllJoinersOfTrip(trip)
                 .stream()
                 .map(mapper::toDto)
@@ -94,28 +95,15 @@ public class AttendlistController {
     @PreAuthorize("!anonymous")
     @PostMapping(value = "/{tripID}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addMessage(Authentication auth, @PathVariable Integer tripID, @Valid @RequestBody MessageDTO messageDTO) {
-        if (messageDTO == null) {
-            return new ResponseEntity<>("Data is missing.", HttpStatus.BAD_REQUEST);
-        }
-
         User user = userService.getCurrent(auth);
         Message message = mapper.toEntity(messageDTO);
         Trip trip = tripService.findByID(tripID);
 
-        if (trip == null) {
-            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
-        }
-
         UserService.isBlocked(user);
-
-        Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, user);
-
-        if (attendlist == null) {
-            return new ResponseEntity<>("You are not joiner of this trip.", HttpStatus.FORBIDDEN);
-        }
+        Attendlist attendlist = attendlistService.isJoinerOfTrip(user, trip);
 
         attendlistService.addMessage(attendlist, message);
-        LOG.debug("Added message {}.", messageDTO);
+        LOG.debug("Added message {} to attendlist for trip with id: {}.", message.toString(), tripID);
         return new ResponseEntity<>(attendlist.toString(), HttpStatus.CREATED);
 
     }
@@ -126,16 +114,9 @@ public class AttendlistController {
         Message message = messageService.findByID(messageID);
         Trip trip = tripService.findByID(tripID);
 
-        if (message == null) {
-            return new ResponseEntity<>("Message with id: " + messageID + " was not found.", HttpStatus.NOT_FOUND);
-        }
-        if (trip == null) {
-            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
-        }
-
         Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, message.getAuthor());
         attendlistService.removeMessage(attendlist, message);
-        return new ResponseEntity<>("Message with id: " + messageID + " was successfully deleted.", HttpStatus.OK);
+        return new ResponseEntity<>("Message with id: " + messageID + " was successfully deleted from attendlist with id: " + attendlist.getId(), HttpStatus.OK);
     }
 
     @PreAuthorize("!anonymous")
@@ -145,28 +126,18 @@ public class AttendlistController {
         User toLeave = userService.findByID(userID);
         Trip trip = tripService.findByID(tripID);
 
-        if (trip == null) {
-            return new ResponseEntity<>("Trip with id: " + tripID + " was not found.", HttpStatus.NOT_FOUND);
-        }
-
-        if (toLeave == null) {
-            return new ResponseEntity<>("User with id: " + userID + " was not found.", HttpStatus.NOT_FOUND);
-        }
-
         if (!Objects.equals(currentUser.getId(), toLeave.getId()) && !Objects.equals(currentUser.getId(), trip.getAuthor().getId())) {
             return new ResponseEntity<>("To remove other user from chat you need to be admin of this chat.", HttpStatus.FORBIDDEN);
         } else if (currentUser.getId().equals(toLeave.getId()) && Objects.equals(trip.getAuthor().getId(), currentUser.getId())) {
             return new ResponseEntity<>("Admin cannot leave chat.", HttpStatus.FORBIDDEN);
         }
 
-        Attendlist attendlist = attendlistService.findByTripAndJoiner(trip, toLeave);
-        if (attendlist == null) {
-            return new ResponseEntity<>("User with id: " + userID + " is not joiner of trip with id: " + tripID, HttpStatus.BAD_REQUEST);
-        }
+        Attendlist attendlist = attendlistService.isJoinerOfTrip(toLeave, trip);
 
         userService.leaveAttendlist(toLeave, attendlist);
         tripService.removeAttendlist(trip, attendlist);
 
+        LOG.info("User with id: {} has leaved trip with id {}.", toLeave.getId(), tripID);
         return new ResponseEntity<>(trip.toString(), HttpStatus.OK);
     }
 }

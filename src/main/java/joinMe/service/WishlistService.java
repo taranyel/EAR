@@ -5,6 +5,7 @@ import joinMe.db.dao.WishlistDao;
 import joinMe.db.entity.Trip;
 import joinMe.db.entity.User;
 import joinMe.db.entity.Wishlist;
+import joinMe.db.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,11 @@ public class WishlistService {
     }
 
     public Wishlist findByID(Integer id) {
-        return dao.find(id);
+        Wishlist wishlist = dao.find(id);
+        if (wishlist == null) {
+            throw NotFoundException.create("Wishlist", id);
+        }
+        return wishlist;
     }
 
     public Wishlist create(User user, Trip trip) {

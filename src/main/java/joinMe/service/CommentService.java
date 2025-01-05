@@ -3,6 +3,7 @@ package joinMe.service;
 import jakarta.transaction.Transactional;
 import joinMe.db.dao.CommentDao;
 import joinMe.db.entity.Comment;
+import joinMe.db.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,10 @@ public class CommentService {
     }
 
     public Comment findByID(Integer id) {
-        return dao.find(id);
+        Comment comment = dao.find(id);
+        if (comment == null) {
+            throw NotFoundException.create("Comment", id);
+        }
+        return comment;
     }
 }
